@@ -224,6 +224,31 @@
     font-size: 13px; color: var(--muted); line-height: 1.4;
   }
 
+  /* ── Countdown chip ── */
+  .countdown {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 8px;
+    font-size: 11px; font-weight: 600; margin-top: 8px;
+    font-family: 'DM Mono', monospace; letter-spacing: 0.02em;
+    width: fit-content;
+  }
+  .countdown svg { flex-shrink: 0; }
+  .countdown .cd-seg { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .countdown .cd-val { font-size: 13px; font-weight: 700; line-height: 1; }
+  .countdown .cd-lbl { font-size: 9px; font-weight: 500; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.06em; }
+  .countdown .cd-sep { font-size: 13px; font-weight: 700; opacity: 0.5; margin-bottom: 8px; }
+
+  .countdown.cd-safe    { background: rgba(72,187,120,0.12); border: 1px solid rgba(72,187,120,0.28); color: #68d391; }
+  .countdown.cd-warn    { background: rgba(236,201,75,0.12); border: 1px solid rgba(236,201,75,0.28); color: #f6e05e; }
+  .countdown.cd-urgent  { background: rgba(245,101,101,0.14); border: 1px solid rgba(245,101,101,0.35); color: #fc8181;
+                           animation: cdPulse 2s ease-in-out infinite; }
+  .countdown.cd-overdue { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); color: var(--faint); }
+
+  @keyframes cdPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.65; }
+  }
+
   .task-actions { flex-shrink: 0; display: flex; gap: 4px; }
 
   .icon-btn {
@@ -638,6 +663,86 @@ function renderTasks(tasks) {
   document.getElementById("taskContainer").innerHTML = html;
 }
 
+// ── Sri Lanka time helpers ──
+function nowSL() {
+  const now = new Date();
+  return new Date(now.getTime() + (now.getTimezoneOffset() + 330) * 60000);
+}
+
+function parseDeadline(dateStr, timeStr) {
+  // dateStr: DD/MM/YYYY  timeStr: "8.15 am" / "10.30 pm"
+  if (!dateStr) return null;
+  const dp = dateStr.split('/');
+  if (dp.length !== 3) return null;
+  const [d, m, y] = dp.map(Number);
+
+  let h = 23, min = 59;
+  if (timeStr) {
+    const match = timeStr.toLowerCase().match(/(\d+)[.:,](\d+)\s*(am|pm)?/);
+    if (match) {
+      h = parseInt(match[1]);
+      min = parseInt(match[2]);
+      const period = match[3];
+      if (period === 'pm' && h !== 12) h += 12;
+      if (period === 'am' && h === 12) h = 0;
+    }
+  }
+  // Build as SL time (UTC+5:30)
+  return new Date(Date.UTC(y, m - 1, d, h - 5, min - 30));
+}
+
+function getCountdownParts(task) {
+  const deadline = parseDeadline(task.date, task.time);
+  if (!deadline) return null;
+  const diffMs = deadline - new Date();  // compare against real UTC
+  if (diffMs < 0) return { overdue: true };
+  const totalMins = Math.floor(diffMs / 60000);
+  const days  = Math.floor(totalMins / 1440);
+  const hours = Math.floor((totalMins % 1440) / 60);
+  const mins  = totalMins % 60;
+  return { overdue: false, days, hours, mins };
+}
+
+function countdownClass(task) {
+  const p = getCountdownParts(task);
+  if (!p) return 'cd-safe';
+  if (p.overdue) return 'cd-overdue';
+  if (p.days === 0 && p.hours < 12) return 'cd-urgent';
+  if (p.days < 2) return 'cd-warn';
+  return 'cd-safe';
+}
+
+function countdownHTML(task) {
+  const p = getCountdownParts(task);
+  if (!p) return '';
+  if (p.overdue) return `
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Overdue`;
+  const segs = [];
+  if (p.days > 0)  segs.push(`<span class="cd-seg"><span class="cd-val">${p.days}</span><span class="cd-lbl">day${p.days !== 1 ? 's' : ''}</span></span>`);
+  segs.push(`<span class="cd-sep">${segs.length ? ':' : ''}</span>`);
+  segs.push(`<span class="cd-seg"><span class="cd-val">${String(p.hours).padStart(2,'0')}</span><span class="cd-lbl">hrs</span></span>`);
+  segs.push(`<span class="cd-sep">:</span>`);
+  segs.push(`<span class="cd-seg"><span class="cd-val">${String(p.mins).padStart(2,'0')}</span><span class="cd-lbl">min</span></span>`);
+  const icon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+  return icon + segs.join('');
+}
+
+// ── Live countdown ticker ──
+function tickCountdowns() {
+  document.querySelectorAll('[id^="cd-"]').forEach(el => {
+    const date = el.dataset.date;
+    const time = el.dataset.time;
+    if (!date) return;
+    const task = { date, time };
+    el.className = 'countdown ' + countdownClass(task);
+    el.innerHTML = countdownHTML(task);
+    // Restore data attrs (innerHTML wipe doesn't affect them)
+    el.dataset.date = date;
+    el.dataset.time = time;
+  });
+}
+
 function buildTaskCard(task, rank) {
   const p = task.priority;
   const dotColors = { red: "var(--red-dot)", yellow: "var(--yel-dot)", green: "var(--grn-dot)" };
@@ -661,6 +766,7 @@ function buildTaskCard(task, rank) {
         </div>
         <div class="task-module" title="${escHtml(task.info)}">${escHtml(task.info)}</div>
         <div class="task-info">${escHtml(task.module)}</div>
+        <div class="countdown ${countdownClass(task)}" id="cd-${task.id}" data-date="${escHtml(task.date)}" data-time="${escHtml(task.time)}">${countdownHTML(task)}</div>
       </div>
       <div class="task-actions">
         <button class="icon-btn danger" onclick="deleteTask('${task.id}')" title="Delete task">
@@ -763,6 +869,7 @@ document.addEventListener("keydown", e => {
 });
 
 init();
+setInterval(tickCountdowns, 30000);  // refresh countdowns every 30 seconds
 </script>
 </body>
 </html>
