@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Batch Academic To-Do</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0f1117;
+    --surface:  #181c27;
+    --surface2: #1e2336;
+    --border:   rgba(255,255,255,0.08);
+    --border2:  rgba(255,255,255,0.14);
+    --text:     #e8eaf0;
+    --muted:    #8890a8;
+    --faint:    #4a5068;
+
+    --red-dot: #f56565;
+    --red-bg:  rgba(245,101,101,0.12);
+    --red-bd:  rgba(245,101,101,0.30);
+    --red-txt: #fc8181;
+
+    --yel-dot: #ecc94b;
+    --yel-bg:  rgba(236,201,75,0.10);
+    --yel-bd:  rgba(236,201,75,0.28);
+    --yel-txt: #f6e05e;
+
+    --grn-dot: #48bb78;
+    --grn-bg:  rgba(72,187,120,0.10);
+    --grn-bd:  rgba(72,187,120,0.26);
+    --grn-txt: #68d391;
+
+    --accent:  #667eea;
+    --accent2: #764ba2;
+    --radius:  10px;
+    --radius-lg: 14px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+
+  .logo {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .header h1 {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .header-sub {
+    font-size: 12px; color: var(--muted); margin-top: 1px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; border-radius: 8px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .add-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .add-btn:active { transform: scale(0.97); }
+
+  /* ── Main layout ── */
+  .main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* ── Stats bar ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 26px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    transition: border-color 0.2s;
+  }
+  .stat-card.red  { border-left: 3px solid var(--red-dot); }
+  .stat-card.yellow { border-left: 3px solid var(--yel-dot); }
+  .stat-card.green  { border-left: 3px solid var(--grn-dot); }
+
+  .stat-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-count { font-size: 22px; font-weight: 600; line-height: 1; margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .stat-card.red .stat-count { color: var(--red-txt); }
+  .stat-card.yellow .stat-count { color: var(--yel-txt); }
+  .stat-card.green .stat-count { color: var(--grn-txt); }
+
+  /* ── Section headers ── */
+  .section-header {
+    display: flex; align-items: center; gap: 8px;
+    margin: 22px 0 10px;
+  }
+  .section-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .section-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .section-badge {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  .section-header.red .section-label { color: var(--red-txt); }
+  .section-header.red .section-badge { background: var(--red-bg); color: var(--red-txt); border: 1px solid var(--red-bd); }
+  .section-header.red .section-dot { background: var(--red-dot); box-shadow: 0 0 6px var(--red-dot); }
+  .section-header.yellow .section-label { color: var(--yel-txt); }
+  .section-header.yellow .section-badge { background: var(--yel-bg); color: var(--yel-txt); border: 1px solid var(--yel-bd); }
+  .section-header.yellow .section-dot { background: var(--yel-dot); box-shadow: 0 0 6px var(--yel-dot); }
+  .section-header.green .section-label { color: var(--grn-txt); }
+  .section-header.green .section-badge { background: var(--grn-bg); color: var(--grn-txt); border: 1px solid var(--grn-bd); }
+  .section-header.green .section-dot { background: var(--grn-dot); box-shadow: 0 0 6px var(--grn-dot); }
+
+  /* ── Task cards ── */
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    display: flex; gap: 14px; align-items: flex-start;
+    animation: slideIn 0.2s ease;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .task-card:hover { border-color: var(--border2); background: var(--surface2); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-rank {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .task-card.red   .task-rank { background: var(--red-bg);  color: var(--red-txt);  border: 1px solid var(--red-bd); }
+  .task-card.yellow .task-rank { background: var(--yel-bg); color: var(--yel-txt);  border: 1px solid var(--yel-bd); }
+  .task-card.green  .task-rank { background: var(--grn-bg); color: var(--grn-txt);  border: 1px solid var(--grn-bd); }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-meta {
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; margin-bottom: 6px;
+  }
+
+  .priority-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 9px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .priority-badge .bdot { width: 6px; height: 6px; border-radius: 50%; }
+  .priority-badge.red    { background: var(--red-bg);  color: var(--red-txt);  border: 1px solid var(--red-bd); }
+  .priority-badge.yellow { background: var(--yel-bg);  color: var(--yel-txt);  border: 1px solid var(--yel-bd); }
+  .priority-badge.green  { background: var(--grn-bg);  color: var(--grn-txt);  border: 1px solid var(--grn-bd); }
+  .priority-badge.red .bdot    { background: var(--red-dot); }
+  .priority-badge.yellow .bdot { background: var(--yel-dot); }
+  .priority-badge.green .bdot  { background: var(--grn-dot); }
+
+  .task-time-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .task-module {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    line-height: 1.35; margin-bottom: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .task-info {
+    font-size: 13px; color: var(--muted); line-height: 1.4;
+  }
+
+  .task-actions { flex-shrink: 0; display: flex; gap: 4px; }
+
+  .icon-btn {
+    background: none; border: 1px solid transparent;
+    border-radius: 7px; cursor: pointer;
+    color: var(--faint); width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+  .icon-btn.danger:hover { background: var(--red-bg); border-color: var(--red-bd); color: var(--red-txt); }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center; padding: 60px 0;
+    color: var(--faint);
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  /* ── Loading ── */
+  .loading {
+    text-align: center; padding: 60px 0; color: var(--muted);
+    font-size: 14px;
+  }
+  .spinner {
+    width: 28px; height: 28px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Modal overlay ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+    animation: fadeIn 0.15s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    padding: 24px;
+    width: 100%; max-width: 480px;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-title {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+  .modal-title span { font-size: 18px; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .form-input {
+    width: 100%; background: var(--bg);
+    border: 1px solid var(--border2); border-radius: 8px;
+    padding: 10px 12px; font-size: 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input.error { border-color: var(--red-dot); }
+  .form-input::placeholder { color: var(--faint); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .priority-selector { display: flex; gap: 8px; }
+  .priority-opt {
+    flex: 1; padding: 10px 0;
+    background: var(--bg); border: 1px solid var(--border2);
+    border-radius: 8px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+  }
+  .priority-opt .p-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .priority-opt .p-label { font-size: 11px; font-weight: 500; color: var(--muted); }
+  .priority-opt:hover { border-color: var(--border2); background: var(--surface2); }
+
+  .priority-opt.active.red    { border-color: var(--red-dot);  background: var(--red-bg);  }
+  .priority-opt.active.yellow { border-color: var(--yel-dot);  background: var(--yel-bg);  }
+  .priority-opt.active.green  { border-color: var(--grn-dot);  background: var(--grn-bg);  }
+  .priority-opt.active.red    .p-label { color: var(--red-txt);  }
+  .priority-opt.active.yellow .p-label { color: var(--yel-txt);  }
+  .priority-opt.active.green  .p-label { color: var(--grn-txt);  }
+
+  .modal-footer {
+    display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
+  }
+  .btn-cancel {
+    padding: 9px 18px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+  }
+  .btn-cancel:hover { background: var(--bg); }
+  .btn-submit {
+    padding: 9px 20px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; color: #fff; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .btn-submit:hover { opacity: 0.88; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text); padding: 10px 20px;
+    border-radius: 20px; font-size: 13px; font-weight: 500;
+    z-index: 200; animation: toastIn 0.2s ease;
+    display: flex; align-items: center; gap: 8px;
+  }
+  @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+  /* ── Firebase config banner ── */
+  .config-banner {
+    background: rgba(102,126,234,0.12);
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    font-size: 13px; color: #a5b4fc;
+    line-height: 1.5;
+  }
+  .config-banner strong { color: #c4b5fd; }
+  .config-banner code {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    background: rgba(0,0,0,0.3); padding: 1px 5px;
+    border-radius: 4px; color: #e2d9fa;
+  }
+
+  /* ── Live indicator ── */
+  .live-dot {
+    display: inline-block; width: 7px; height: 7px;
+    border-radius: 50%; background: var(--grn-dot);
+    animation: pulse 2s infinite;
+    margin-right: 4px;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+  }
+
+  @media (max-width: 480px) {
+    .stats { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .header h1 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     SETUP INSTRUCTIONS (remove after configuring)
+     ═══════════════════════════════════════════════
+  1. Go to https://console.firebase.google.com
+  2. Create a new project (e.g. "batch-todo")
+  3. Add a Web App → copy the firebaseConfig object
+  4. Go to Realtime Database → Create database → Start in test mode
+  5. Replace the firebaseConfig below with your own values
+  6. Push index.html to your GitHub repo
+  7. Go to Settings → Pages → Deploy from branch (main / root)
+  8. Share the GitHub Pages URL with your batch!
+═══════════════════════════════════════════════ -->
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">📚</div>
+    <div>
+      <h1>Batch Academic To-Do</h1>
+      <div class="header-sub">
+        <span class="live-dot"></span>Live · sorted by priority
+      </div>
+    </div>
+  </div>
+  <button class="add-btn" onclick="openModal()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/>
+    </svg>
+    Add Task
+  </button>
+</header>
+
+<main class="main">
+
+  <div class="config-banner" id="configBanner" style="display:none">
+    ⚙️ <strong>Setup required:</strong> Open <code>index.html</code> and replace the
+    <code>firebaseConfig</code> values with your own Firebase project credentials.
+    See the comment at the top of the file for step-by-step instructions.
+  </div>
+
+  <div class="stats">
+    <div class="stat-card red">
+      <div class="stat-dot" style="background:var(--red-dot)"></div>
+      <div>
+        <div class="stat-label">Urgent</div>
+        <div class="stat-count" id="cnt-red">–</div>
+      </div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-dot" style="background:var(--yel-dot)"></div>
+      <div>
+        <div class="stat-label">Moderate</div>
+        <div class="stat-count" id="cnt-yellow">–</div>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-dot" style="background:var(--grn-dot)"></div>
+      <div>
+        <div class="stat-label">On Track</div>
+        <div class="stat-count" id="cnt-green">–</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="taskContainer">
+    <div class="loading">
+      <div class="spinner"></div>
+      Connecting to database…
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Add Task Modal ── -->
+<div class="overlay" id="modal" style="display:none" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-title"><span>✏️</span> Add New Task</div>
+
+    <div class="form-group">
+      <label class="form-label">Module Name</label>
+      <input class="form-input" id="f-module" type="text" placeholder="e.g. Engineering Mathematics" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Task Information</label>
+      <input class="form-input" id="f-info" type="text" placeholder="e.g. Assignment 02 — submit via LMS" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="f-date" type="text" placeholder="DD/MM/YYYY" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Time</label>
+        <input class="form-input" id="f-time" type="text" placeholder="8.15 am" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Priority Level</label>
+      <div class="priority-selector">
+        <button class="priority-opt active red" onclick="selectPriority('red')">
+          <div class="p-dot" style="background:var(--red-dot)"></div>
+          <div class="p-label">Urgent</div>
+        </button>
+        <button class="priority-opt yellow" onclick="selectPriority('yellow')">
+          <div class="p-dot" style="background:var(--yel-dot)"></div>
+          <div class="p-label">Moderate</div>
+        </button>
+        <button class="priority-opt green" onclick="selectPriority('green')">
+          <div class="p-dot" style="background:var(--grn-dot)"></div>
+          <div class="p-label">On Track</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-submit" id="submitBtn" onclick="addTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════
+//  🔧 REPLACE THIS with your Firebase project config
+//  Get it from: Firebase Console → Your Project
+//               → Project Settings → Your Apps → Web
+// ══════════════════════════════════════════════════
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDqCH8ScsDyZAa-zzaBUp3sm_k2xiV-1Yc",
+  authDomain: "batch-todo.firebaseapp.com",
+  projectId: "batch-todo",
+  storageBucket: "batch-todo.firebasestorage.app",
+  messagingSenderId: "498420152028",
+  appId: "1:498420152028:web:89202aeece7c552bf3e619",
+  measurementId: "G-8Z6RG3PP9R"
+};
+// ══════════════════════════════════════════════════
+
+const PRIORITY_ORDER = { red: 1, yellow: 2, green: 3 };
+const PRIORITY_LABEL = { red: "Urgent", yellow: "Moderate", green: "On Track" };
+
+let db, tasksRef;
+let selectedPriority = "red";
+let confirmDeleteId = null;
+
+// ── Bootstrap ──
+function init() {
+  const isPlaceholder = firebaseConfig.apiKey === "YOUR_API_KEY";
+  if (isPlaceholder) {
+    document.getElementById("configBanner").style.display = "block";
+    useDemoMode();
+    return;
+  }
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    tasksRef = db.ref("tasks");
+    seedIfEmpty();
+    listenToTasks();
+  } catch (e) {
+    document.getElementById("taskContainer").innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><p>Firebase connection failed.<br>Check your config values.</p></div>`;
+  }
+}
+
+// ── Seed first task if database is empty ──
+async function seedIfEmpty() {
+  const snapshot = await tasksRef.once("value");
+  if (!snapshot.exists()) {
+    tasksRef.push({
+      module: "Fundamentals of Machine Elements Design",
+      info: "Mid Term Assignment : Imesh sir",
+      date: "11/05/2026",
+      time: "8.15 am",
+      priority: "red",
+      createdAt: Date.now()
+    });
+  }
+}
+
+// ── Real-time listener ──
+function listenToTasks() {
+  tasksRef.on("value", snapshot => {
+    const data = snapshot.val() || {};
+    const tasks = Object.entries(data).map(([id, t]) => ({ id, ...t }));
+    tasks.sort((a, b) => {
+      const po = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+      return po !== 0 ? po : a.createdAt - b.createdAt;
+    });
+    renderTasks(tasks);
+  });
+}
+
+// ── Render ──
+function renderTasks(tasks) {
+  const byPriority = { red: [], yellow: [], green: [] };
+  tasks.forEach(t => (byPriority[t.priority] || (byPriority.red)).push(t));
+
+  document.getElementById("cnt-red").textContent    = byPriority.red.length;
+  document.getElementById("cnt-yellow").textContent = byPriority.yellow.length;
+  document.getElementById("cnt-green").textContent  = byPriority.green.length;
+
+  if (tasks.length === 0) {
+    document.getElementById("taskContainer").innerHTML =
+      `<div class="empty"><div class="empty-icon">📋</div><p>No tasks yet.<br>Be the first to add one!</p></div>`;
+    return;
+  }
+
+  let html = "";
+  let globalRank = 1;
+
+  ["red", "yellow", "green"].forEach(level => {
+    const group = byPriority[level];
+    if (!group.length) return;
+    const dotColors = { red: "var(--red-dot)", yellow: "var(--yel-dot)", green: "var(--grn-dot)" };
+    html += `
+      <div class="section-header ${level}">
+        <div class="section-dot" style="background:${dotColors[level]}"></div>
+        <span class="section-label">${PRIORITY_LABEL[level]}</span>
+        <span class="section-badge">${group.length}</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="task-list">`;
+    group.forEach(task => {
+      html += buildTaskCard(task, globalRank++);
+    });
+    html += `</div>`;
+  });
+
+  document.getElementById("taskContainer").innerHTML = html;
+}
+
+function buildTaskCard(task, rank) {
+  const p = task.priority;
+  const dotColors = { red: "var(--red-dot)", yellow: "var(--yel-dot)", green: "var(--grn-dot)" };
+  return `
+    <div class="task-card ${p}">
+      <div class="task-rank">${rank}</div>
+      <div class="task-body">
+        <div class="task-meta">
+          <span class="priority-badge ${p}">
+            <span class="bdot" style="background:${dotColors[p]}"></span>
+            ${PRIORITY_LABEL[p]}
+          </span>
+          <span class="task-time-chip">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${escHtml(task.date)}
+          </span>
+          <span class="task-time-chip">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${escHtml(task.time)}
+          </span>
+        </div>
+        <div class="task-module" title="${escHtml(task.module)}">${escHtml(task.module)}</div>
+        <div class="task-info">${escHtml(task.info)}</div>
+      </div>
+      <div class="task-actions">
+        <button class="icon-btn danger" onclick="deleteTask('${task.id}')" title="Delete task">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+          </svg>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ── Add task ──
+function openModal() {
+  document.getElementById("modal").style.display = "flex";
+  document.getElementById("f-module").focus();
+}
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  clearForm();
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById("modal")) closeModal();
+}
+
+function selectPriority(level) {
+  selectedPriority = level;
+  document.querySelectorAll(".priority-opt").forEach(el => {
+    el.classList.remove("active");
+  });
+  document.querySelector(`.priority-opt.${level}`).classList.add("active");
+}
+
+function clearForm() {
+  ["f-module","f-info","f-date","f-time"].forEach(id => {
+    document.getElementById(id).value = "";
+    document.getElementById(id).classList.remove("error");
+  });
+  selectPriority("red");
+}
+
+async function addTask() {
+  const module = document.getElementById("f-module").value.trim();
+  const info   = document.getElementById("f-info").value.trim();
+  const date   = document.getElementById("f-date").value.trim();
+  const time   = document.getElementById("f-time").value.trim();
+
+  let valid = true;
+  [["f-module", module], ["f-info", info], ["f-date", date], ["f-time", time]].forEach(([id, val]) => {
+    if (!val) { document.getElementById(id).classList.add("error"); valid = false; }
+    else       { document.getElementById(id).classList.remove("error"); }
+  });
+  if (!valid) return;
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+
+  try {
+    await tasksRef.push({ module, info, date, time, priority: selectedPriority, createdAt: Date.now() });
+    closeModal();
+    showToast("✅ Task added successfully!");
+  } catch (e) {
+    showToast("❌ Failed to save task. Check connection.");
+  }
+  btn.disabled = false; btn.textContent = "Add Task";
+}
+
+function deleteTask(id) {
+  if (!confirm("Delete this task?")) return;
+  tasksRef.child(id).remove().then(() => showToast("🗑 Task removed"));
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── Helpers ──
+function escHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── Demo mode (when Firebase not configured) ──
+function useDemoMode() {
+  const seed = [{
+    id: "demo1",
+    module: "Fundamentals of Machine Elements Design",
+    info: "Mid Term Assignment : Imesh sir",
+    date: "11/05/2026", time: "8.15 am", priority: "red", createdAt: 1
+  }];
+  renderTasks(seed);
+}
+
+// ── Keyboard shortcut ──
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
+  if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); openModal(); }
+});
+
+init();
+</script>
+</body>
+</html>
