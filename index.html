@@ -650,8 +650,8 @@ function buildTaskCard(task, rank) {
             ${escHtml(task.time)}
           </span>
         </div>
-        <div class="task-module" title="${escHtml(task.module)}">${escHtml(task.module)}</div>
-        <div class="task-info">${escHtml(task.info)}</div>
+        <div class="task-module" title="${escHtml(task.info)}">${escHtml(task.info)}</div>
+        <div class="task-info">${escHtml(task.module)}</div>
       </div>
       <div class="task-actions">
         <button class="icon-btn danger" onclick="deleteTask('${task.id}')" title="Delete task">
