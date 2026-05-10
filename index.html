@@ -536,6 +536,14 @@ const firebaseConfig = {
 // ══════════════════════════════════════════════════
 
 const PRIORITY_ORDER = { red: 1, yellow: 2, green: 3 };
+
+function parseTaskDate(str) {
+  if (!str) return Infinity;
+  const parts = str.split('/');
+  if (parts.length !== 3) return Infinity;
+  const [d, m, y] = parts;
+  return new Date(y, m - 1, d).getTime();
+}
 const PRIORITY_LABEL = { red: "Urgent", yellow: "Moderate", green: "On Track" };
 
 let db, tasksRef;
@@ -584,7 +592,8 @@ function listenToTasks() {
     const tasks = Object.entries(data).map(([id, t]) => ({ id, ...t }));
     tasks.sort((a, b) => {
       const po = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-      return po !== 0 ? po : a.createdAt - b.createdAt;
+      if (po !== 0) return po;
+      return parseTaskDate(a.date) - parseTaskDate(b.date);
     });
     renderTasks(tasks);
   });
