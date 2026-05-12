@@ -332,6 +332,99 @@
   select.form-input option { background: #1e2336; color: var(--text); }
   select.form-input option:disabled { color: var(--faint); }
 
+
+  /* ── Date & Time Pickers ── */
+  .picker-wrap { position: relative; }
+  .picker-btn {
+    width: 100%; background: var(--bg);
+    border: 1px solid var(--border2); border-radius: 8px;
+    padding: 10px 12px; font-size: 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: border-color 0.15s; text-align: left;
+  }
+  .picker-btn:hover, .picker-btn.open { border-color: var(--accent); }
+  .picker-btn svg { flex-shrink: 0; color: var(--muted); }
+  .picker-btn.error { border-color: var(--red-dot); }
+  .picker-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #141824; border: 1px solid var(--border2);
+    border-radius: 14px; z-index: 300;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    display: none; overflow: hidden;
+  }
+  .picker-panel.open { display: block; }
+
+  /* Calendar */
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 14px 8px;
+  }
+  .cal-month-label { font-size: 14px; font-weight: 600; color: var(--text); }
+  .cal-nav {
+    background: none; border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer; color: var(--muted);
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1; transition: all 0.12s;
+  }
+  .cal-nav:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+  .cal-grid { padding: 0 10px 12px; display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+  .cal-day-name {
+    text-align: center; font-size: 10px; font-weight: 600;
+    color: var(--faint); padding: 4px 0; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .cal-day {
+    text-align: center; padding: 7px 2px; font-size: 12px;
+    border-radius: 6px; cursor: pointer; color: var(--muted);
+    transition: all 0.1s; border: 1px solid transparent;
+  }
+  .cal-day:hover:not(.empty):not(.selected) { background: var(--surface2); color: var(--text); }
+  .cal-day.past { opacity: 0.35; }
+  .cal-day.today { color: var(--accent); font-weight: 700; border-color: rgba(102,126,234,0.35); }
+  .cal-day.selected { background: var(--accent); color: #fff; font-weight: 700; border-color: var(--accent); }
+  .cal-day.empty { cursor: default; }
+
+  /* Digital Clock */
+  .clock-body { padding: 16px 16px 8px; }
+  .clock-display { display: flex; align-items: flex-start; justify-content: center; gap: 6px; margin-bottom: 14px; }
+  .clock-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .clock-arrow {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer; color: var(--muted);
+    width: 44px; height: 26px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; transition: all 0.12s; user-select: none;
+  }
+  .clock-arrow:hover { background: rgba(102,126,234,0.15); color: var(--accent); border-color: var(--accent); }
+  .clock-arrow:active { transform: scale(0.94); }
+  .clock-digits {
+    font-family: 'DM Mono', monospace; font-size: 34px; font-weight: 500;
+    color: var(--text); background: var(--bg); border: 1px solid var(--border2);
+    border-radius: 8px; width: 72px; text-align: center; padding: 8px 0;
+    letter-spacing: 0.04em; line-height: 1;
+  }
+  .clock-sep {
+    font-family: 'DM Mono', monospace; font-size: 30px; font-weight: 700;
+    color: var(--accent); margin-top: 26px; line-height: 1.1; align-self: flex-start;
+  }
+  .clock-unit { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
+  .ampm-row { display: flex; justify-content: center; margin-bottom: 6px; }
+  .ampm-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border2); }
+  .ampm-btn {
+    padding: 7px 22px; font-size: 12px; font-weight: 600;
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .ampm-btn.active { background: var(--accent); color: #fff; }
+  .picker-confirm {
+    display: block; width: calc(100% - 28px); margin: 10px 14px 14px;
+    padding: 9px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; color: #fff; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .picker-confirm:hover { opacity: 0.88; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
   .priority-selector { display: flex; gap: 8px; }
@@ -419,6 +512,106 @@
     .form-row { grid-template-columns: 1fr; }
     .header h1 { font-size: 14px; }
   }
+
+  /* ── Picker shared ── */
+  .picker-wrap { position: relative; }
+  .picker-trigger {
+    width: 100%; background: var(--bg);
+    border: 1px solid var(--border2); border-radius: 8px;
+    padding: 10px 12px; font-size: 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    text-align: left; transition: border-color 0.15s;
+  }
+  .picker-trigger:hover { border-color: var(--accent); }
+  .picker-trigger.error { border-color: var(--red-dot); }
+  .picker-trigger.has-value { color: var(--text); }
+  .picker-trigger.no-value { color: var(--faint); }
+  .picker-trigger svg { flex-shrink: 0; opacity: 0.55; }
+  .picker-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #161929; border: 1px solid var(--border2);
+    border-radius: 12px; z-index: 200; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    animation: pickerIn 0.15s ease;
+  }
+  @keyframes pickerIn { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── Calendar ── */
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px 8px; border-bottom: 1px solid var(--border);
+  }
+  .cal-nav {
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--muted); width: 28px; height: 28px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; transition: all 0.15s;
+  }
+  .cal-nav:hover { border-color: var(--accent); color: var(--accent); }
+  .cal-month-label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .cal-grid { padding: 8px 10px 10px; }
+  .cal-daynames {
+    display: grid; grid-template-columns: repeat(7,1fr);
+    margin-bottom: 4px;
+  }
+  .cal-dayname { text-align: center; font-size: 10px; font-weight: 600; color: var(--faint); padding: 4px 0; text-transform: uppercase; }
+  .cal-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+  .cal-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; border-radius: 6px; cursor: pointer;
+    border: none; background: none; color: var(--text);
+    transition: background 0.1s; font-family: 'DM Mono', monospace;
+  }
+  .cal-day:hover { background: var(--surface2); }
+  .cal-day.empty { pointer-events: none; }
+  .cal-day.today { color: var(--accent); font-weight: 700; }
+  .cal-day.selected { background: var(--accent); color: #fff; font-weight: 600; }
+  .cal-day.selected:hover { background: var(--accent2); }
+  .cal-day.past { color: var(--faint); opacity: 0.5; }
+
+  /* ── Digital Clock ── */
+  .clk-wrap { padding: 16px; }
+  .clk-display {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-bottom: 10px;
+  }
+  .clk-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .clk-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--muted); width: 36px; height: 26px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s; font-size: 13px;
+  }
+  .clk-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(102,126,234,0.1); }
+  .clk-btn:active { transform: scale(0.93); }
+  .clk-digit {
+    font-family: 'DM Mono', monospace; font-size: 32px; font-weight: 700;
+    color: var(--text); min-width: 52px; text-align: center; line-height: 1;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 4px;
+  }
+  .clk-sep {
+    font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700;
+    color: var(--accent); margin-bottom: 26px; line-height: 1;
+  }
+  .clk-ampm-wrap { display: flex; flex-direction: column; gap: 4px; margin-left: 4px; }
+  .clk-ampm-btn {
+    font-size: 11px; font-weight: 600; padding: 5px 10px;
+    border-radius: 6px; cursor: pointer; border: 1px solid var(--border);
+    background: none; color: var(--faint); font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s; letter-spacing: 0.04em;
+  }
+  .clk-ampm-btn.active { background: rgba(102,126,234,0.18); border-color: var(--accent); color: #a5b4fc; }
+  .clk-confirm {
+    width: 100%; margin-top: 10px; padding: 9px 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 8px; color: #fff;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: opacity 0.15s;
+  }
+  .clk-confirm:hover { opacity: 0.88; }
+
 </style>
 </head>
 <body>
@@ -519,13 +712,61 @@
       <input class="form-input" id="f-info" type="text" placeholder="e.g. Assignment 02 — submit via LMS" />
     </div>
     <div class="form-row">
+      <!-- Date picker -->
       <div class="form-group">
         <label class="form-label">Date</label>
-        <input class="form-input" id="f-date" type="text" placeholder="DD/MM/YYYY" />
+        <div class="picker-wrap">
+          <input type="hidden" id="f-date" />
+          <button type="button" class="picker-btn" id="date-btn" onclick="toggleDatePicker()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="date-display">Loading…</span>
+          </button>
+          <div class="picker-panel" id="date-panel">
+            <div class="cal-header">
+              <button class="cal-nav" onclick="calPrev()">&#8249;</button>
+              <span class="cal-month-label" id="cal-month-label"></span>
+              <button class="cal-nav" onclick="calNext()">&#8250;</button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+        </div>
       </div>
+      <!-- Time picker -->
       <div class="form-group">
         <label class="form-label">Time</label>
-        <input class="form-input" id="f-time" type="text" placeholder="8.15 am" />
+        <div class="picker-wrap">
+          <input type="hidden" id="f-time" />
+          <button type="button" class="picker-btn" id="time-btn" onclick="toggleTimePicker()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="time-display">Loading…</span>
+          </button>
+          <div class="picker-panel" id="time-panel">
+            <div class="clock-body">
+              <div class="clock-display">
+                <div class="clock-col">
+                  <button class="clock-arrow" onclick="adjustHour(1)">▲</button>
+                  <div class="clock-digits" id="tp-hour">08</div>
+                  <button class="clock-arrow" onclick="adjustHour(-1)">▼</button>
+                  <div class="clock-unit">Hour</div>
+                </div>
+                <div class="clock-sep">:</div>
+                <div class="clock-col">
+                  <button class="clock-arrow" onclick="adjustMin(1)">▲</button>
+                  <div class="clock-digits" id="tp-min">00</div>
+                  <button class="clock-arrow" onclick="adjustMin(-1)">▼</button>
+                  <div class="clock-unit">Min</div>
+                </div>
+              </div>
+              <div class="ampm-row">
+                <div class="ampm-toggle">
+                  <button class="ampm-btn active" id="ampm-am" onclick="setAmPm('am')">AM</button>
+                  <button class="ampm-btn" id="ampm-pm" onclick="setAmPm('pm')">PM</button>
+                </div>
+              </div>
+            </div>
+            <button class="picker-confirm" onclick="confirmTime()">Set Time</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-group">
@@ -792,7 +1033,7 @@ function buildTaskCard(task, rank) {
 // ── Add task ──
 function openModal() {
   document.getElementById("modal").style.display = "flex";
-  document.getElementById("f-module").focus();
+  initPickerDefaults();
 }
 function closeModal() {
   document.getElementById("modal").style.display = "none";
@@ -811,13 +1052,13 @@ function selectPriority(level) {
 }
 
 function clearForm() {
-  ["f-module","f-info","f-date","f-time"].forEach(id => {
-    document.getElementById(id).value = "";
-    document.getElementById(id).classList.remove("error");
-  });
-  // Reset select to placeholder
   const sel = document.getElementById("f-module");
   sel.selectedIndex = 0;
+  sel.classList.remove("error");
+  const info = document.getElementById("f-info");
+  info.value = ""; info.classList.remove("error");
+  closeAllPickers();
+  initPickerDefaults();
   selectPriority("red");
 }
 
@@ -828,10 +1069,14 @@ async function addTask() {
   const time   = document.getElementById("f-time").value.trim();
 
   let valid = true;
-  [["f-module", module], ["f-info", info], ["f-date", date], ["f-time", time]].forEach(([id, val]) => {
+  [["f-module", module], ["f-info", info]].forEach(([id, val]) => {
     if (!val) { document.getElementById(id).classList.add("error"); valid = false; }
     else       { document.getElementById(id).classList.remove("error"); }
   });
+  if (!date) { document.getElementById("date-btn").classList.add("error"); valid = false; }
+  else        { document.getElementById("date-btn").classList.remove("error"); }
+  if (!time)  { document.getElementById("time-btn").classList.add("error"); valid = false; }
+  else         { document.getElementById("time-btn").classList.remove("error"); }
   if (!valid) return;
 
   const btn = document.getElementById("submitBtn");
@@ -876,10 +1121,315 @@ function useDemoMode() {
   renderTasks(seed);
 }
 
+
+// ── Picker state ──
+let calState = { viewYear: 0, viewMonth: 0, selYear: 0, selMonth: 0, selDay: 0 };
+let clkState = { hour: 8, minute: 0, ampm: 'am' };
+
+function initPickers() {
+  const sl = nowSL();
+  const y = sl.getFullYear(), mo = sl.getMonth(), d = sl.getDate();
+  let h = sl.getHours(), min = sl.getMinutes();
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+
+  calState = { viewYear: y, viewMonth: mo, selYear: y, selMonth: mo, selDay: d };
+  clkState = { hour: h, minute: min, ampm };
+
+  // Auto-set defaults into hidden inputs & trigger displays
+  const dd = String(d).padStart(2,'0');
+  const mm = String(mo+1).padStart(2,'0');
+  document.getElementById('f-date').value = dd+'/'+mm+'/'+y;
+  const db = document.getElementById('f-date-btn');
+  document.getElementById('f-date-display').textContent = dd+'/'+mm+'/'+y;
+  db.classList.remove('no-value','error'); db.classList.add('has-value');
+
+  const hDisp = String(h).padStart(2,'0');
+  const mDisp = String(min).padStart(2,'0');
+  const timeStr = h+'.'+mDisp+' '+ampm;
+  document.getElementById('f-time').value = timeStr;
+  const tb = document.getElementById('f-time-btn');
+  document.getElementById('f-time-display').textContent = hDisp+':'+mDisp+' '+ampm.toUpperCase();
+  tb.classList.remove('no-value','error'); tb.classList.add('has-value');
+
+  renderClock();
+}
+
+// ── Calendar ──
+function toggleCalendar(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('cal-panel');
+  const clkPanel = document.getElementById('clk-panel');
+  clkPanel.style.display = 'none';
+  if (panel.style.display === 'none') {
+    renderCalendar();
+    panel.style.display = 'block';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function calShiftMonth(dir) {
+  calState.viewMonth += dir;
+  if (calState.viewMonth > 11) { calState.viewMonth = 0; calState.viewYear++; }
+  if (calState.viewMonth < 0)  { calState.viewMonth = 11; calState.viewYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const { viewYear, viewMonth, selYear, selMonth, selDay } = calState;
+  const sl = nowSL();
+  const todayY = sl.getFullYear(), todayM = sl.getMonth(), todayD = sl.getDate();
+
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent = MONTHS[viewMonth] + ' ' + viewYear;
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday   = d===todayD && viewMonth===todayM && viewYear===todayY;
+    const isSelected= d===selDay && viewMonth===selMonth && viewYear===selYear;
+    const isPast    = new Date(viewYear, viewMonth, d) < new Date(todayY, todayM, todayD);
+    let cls = 'cal-day';
+    if (isSelected) cls += ' selected';
+    else if (isToday) cls += ' today';
+    if (isPast) cls += ' past';
+    html += `<button class="${cls}" onclick="selectDay(${d})">${d}</button>`;
+  }
+  document.getElementById('cal-days').innerHTML = html;
+}
+
+function selectDay(d) {
+  calState.selDay   = d;
+  calState.selMonth = calState.viewMonth;
+  calState.selYear  = calState.viewYear;
+  const dd = String(d).padStart(2,'0');
+  const mm = String(calState.viewMonth+1).padStart(2,'0');
+  const val = dd+'/'+mm+'/'+calState.viewYear;
+  document.getElementById('f-date').value = val;
+  const btn = document.getElementById('f-date-btn');
+  document.getElementById('f-date-display').textContent = val;
+  btn.classList.remove('no-value','error'); btn.classList.add('has-value');
+  document.getElementById('cal-panel').style.display = 'none';
+  renderCalendar();
+}
+
+// ── Clock ──
+function toggleClock(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('clk-panel');
+  const calPanel = document.getElementById('cal-panel');
+  calPanel.style.display = 'none';
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  renderClock();
+}
+
+function adjustHour(dir) {
+  clkState.hour = ((clkState.hour - 1 + dir + 12) % 12) + 1;
+  renderClock();
+}
+function adjustMin(dir) {
+  clkState.minute = (clkState.minute + dir + 60) % 60;
+  renderClock();
+}
+function setAmPm(val) {
+  clkState.ampm = val;
+  renderClock();
+}
+function renderClock() {
+  document.getElementById('clk-h').textContent = String(clkState.hour).padStart(2,'0');
+  document.getElementById('clk-m').textContent = String(clkState.minute).padStart(2,'0');
+  document.getElementById('btn-am').classList.toggle('active', clkState.ampm === 'am');
+  document.getElementById('btn-pm').classList.toggle('active', clkState.ampm === 'pm');
+}
+function confirmTime() {
+  const { hour, minute, ampm } = clkState;
+  const hDisp = String(hour).padStart(2,'0');
+  const mDisp = String(minute).padStart(2,'0');
+  const stored = hour + '.' + mDisp + ' ' + ampm;
+  document.getElementById('f-time').value = stored;
+  const btn = document.getElementById('f-time-btn');
+  document.getElementById('f-time-display').textContent = hDisp+':'+mDisp+' '+ampm.toUpperCase();
+  btn.classList.remove('no-value','error'); btn.classList.add('has-value');
+  document.getElementById('clk-panel').style.display = 'none';
+}
+
+function closePickers() {
+  const cp = document.getElementById('cal-panel');
+  const tp = document.getElementById('clk-panel');
+  if (cp) cp.style.display = 'none';
+  if (tp) tp.style.display = 'none';
+}
+
+// Close pickers on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#cal-wrap')) {
+    const p = document.getElementById('cal-panel');
+    if (p) p.style.display = 'none';
+  }
+  if (!e.target.closest('#clk-wrap')) {
+    const p = document.getElementById('clk-panel');
+    if (p) p.style.display = 'none';
+  }
+});
+
 // ── Keyboard shortcut ──
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") closeModal();
   if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); openModal(); }
+});
+
+
+// ══════════════════════════════════════════
+//  DATE & TIME PICKER LOGIC
+// ══════════════════════════════════════════
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+const DAY_NAMES   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+let dpYear, dpMonth, dpSelectedDay, dpSelectedMonth, dpSelectedYear;
+let tpHour = 8, tpMin = 0, tpPeriod = 'am';
+
+function initPickerDefaults() {
+  const sl = nowSL();
+
+  // Date defaults → today
+  dpYear = sl.getFullYear();
+  dpMonth = sl.getMonth();
+  dpSelectedDay   = sl.getDate();
+  dpSelectedMonth = sl.getMonth();
+  dpSelectedYear  = sl.getFullYear();
+  applyDateValue();
+
+  // Time defaults → current SL time
+  let h = sl.getHours();
+  const m = sl.getMinutes();
+  tpPeriod = h >= 12 ? 'pm' : 'am';
+  h = h % 12; if (h === 0) h = 12;
+  tpHour = h; tpMin = m;
+  applyTimeValue();
+}
+
+// ── Calendar ──
+function toggleDatePicker() {
+  const panel = document.getElementById('date-panel');
+  const isOpen = panel.classList.contains('open');
+  closeAllPickers();
+  if (!isOpen) {
+    renderCalendar();
+    panel.classList.add('open');
+    document.getElementById('date-btn').classList.add('open');
+  }
+}
+
+function calPrev() { dpMonth--; if (dpMonth < 0) { dpMonth = 11; dpYear--; } renderCalendar(); }
+function calNext() { dpMonth++; if (dpMonth > 11) { dpMonth = 0;  dpYear++; } renderCalendar(); }
+
+function renderCalendar() {
+  document.getElementById('cal-month-label').textContent = MONTH_NAMES[dpMonth] + ' ' + dpYear;
+  const sl = nowSL();
+  const tD = sl.getDate(), tM = sl.getMonth(), tY = sl.getFullYear();
+  const firstDay    = new Date(dpYear, dpMonth, 1).getDay();
+  const daysInMonth = new Date(dpYear, dpMonth + 1, 0).getDate();
+
+  let html = DAY_NAMES.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday    = d === tD && dpMonth === tM && dpYear === tY;
+    const isSelected = d === dpSelectedDay && dpMonth === dpSelectedMonth && dpYear === dpSelectedYear;
+    const isPast     = new Date(dpYear, dpMonth, d) < new Date(tY, tM, tD);
+    let cls = 'cal-day';
+    if (isToday)    cls += ' today';
+    if (isSelected) cls += ' selected';
+    if (isPast && !isToday) cls += ' past';
+    html += `<div class="${cls}" onclick="selectDay(${d})">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function selectDay(d) {
+  dpSelectedDay = d; dpSelectedMonth = dpMonth; dpSelectedYear = dpYear;
+  applyDateValue();
+  closeAllPickers();
+}
+
+function applyDateValue() {
+  const dd = String(dpSelectedDay).padStart(2,'0');
+  const mm = String(dpSelectedMonth + 1).padStart(2,'0');
+  const val = `${dd}/${mm}/${dpSelectedYear}`;
+  document.getElementById('f-date').value = val;
+  document.getElementById('date-display').textContent = val;
+  document.getElementById('date-btn').classList.remove('error');
+}
+
+// ── Clock ──
+function toggleTimePicker() {
+  const panel = document.getElementById('time-panel');
+  const isOpen = panel.classList.contains('open');
+  closeAllPickers();
+  if (!isOpen) {
+    renderClock();
+    panel.classList.add('open');
+    document.getElementById('time-btn').classList.add('open');
+  }
+}
+
+function adjustHour(d) {
+  tpHour += d;
+  if (tpHour > 12) tpHour = 1;
+  if (tpHour < 1)  tpHour = 12;
+  renderClock();
+}
+
+function adjustMin(d) {
+  tpMin += d;
+  if (tpMin >= 60) tpMin = 0;
+  if (tpMin < 0)   tpMin = 59;
+  renderClock();
+}
+
+function setAmPm(p) {
+  tpPeriod = p;
+  renderClock();
+}
+
+function renderClock() {
+  document.getElementById('tp-hour').textContent = String(tpHour).padStart(2,'0');
+  document.getElementById('tp-min').textContent  = String(tpMin).padStart(2,'0');
+  document.getElementById('ampm-am').classList.toggle('active', tpPeriod === 'am');
+  document.getElementById('ampm-pm').classList.toggle('active', tpPeriod === 'pm');
+}
+
+function confirmTime() {
+  applyTimeValue();
+  closeAllPickers();
+}
+
+function applyTimeValue() {
+  const val = `${tpHour}.${String(tpMin).padStart(2,'0')} ${tpPeriod}`;
+  document.getElementById('f-time').value = val;
+  document.getElementById('time-display').textContent = val;
+  document.getElementById('time-btn').classList.remove('error');
+  renderClock();
+}
+
+function closeAllPickers() {
+  ['date-panel','time-panel'].forEach(id => {
+    document.getElementById(id).classList.remove('open');
+  });
+  ['date-btn','time-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  });
+}
+
+// Close pickers on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.picker-wrap')) closeAllPickers();
 });
 
 init();
