@@ -152,7 +152,7 @@
   .section-header.red .section-dot { background: var(--red-dot); box-shadow: 0 0 6px var(--red-dot); }
   .section-header.yellow .section-label { color: var(--yel-txt); }
   .section-header.yellow .section-badge { background: var(--yel-bg); color: var(--yel-txt); border: 1px solid var(--yel-bd); }
-  .section-header.yellow .section-dot { background: var(--yel-dot); box-shadow: 0 0 6px var(--yel-dot); }
+  .section-header.yellow .section-dot { baifckground: var(--yel-dot); box-shadow: 0 0 6px var(--yel-dot); }
   .section-header.green .section-label { color: var(--grn-txt); }
   .section-header.green .section-badge { background: var(--grn-bg); color: var(--grn-txt); border: 1px solid var(--grn-bd); }
   .section-header.green .section-dot { background: var(--grn-dot); box-shadow: 0 0 6px var(--grn-dot); }
@@ -401,6 +401,16 @@
     color: var(--text); background: var(--bg); border: 1px solid var(--border2);
     border-radius: 8px; width: 72px; text-align: center; padding: 8px 0;
     letter-spacing: 0.04em; line-height: 1;
+    outline: none; -moz-appearance: textfield; appearance: textfield;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    cursor: text;
+  }
+  .clock-digits::-webkit-inner-spin-button,
+  .clock-digits::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .clock-digits:focus {
+    border-color: var(--accent);
+    background: var(--surface2);
+    color: #c4b5fd;
   }
   .clock-sep {
     font-family: 'DM Mono', monospace; font-size: 30px; font-weight: 700;
@@ -423,6 +433,11 @@
     transition: opacity 0.15s;
   }
   .picker-confirm:hover { opacity: 0.88; }
+  .clk-hint {
+    text-align: center; font-size: 10px; color: var(--faint);
+    margin: 4px 0 2px; letter-spacing: 0.03em;
+    font-family: 'DM Mono', monospace;
+  }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -745,14 +760,24 @@
               <div class="clock-display">
                 <div class="clock-col">
                   <button class="clock-arrow" onclick="adjustHour(1)">▲</button>
-                  <div class="clock-digits" id="tp-hour">08</div>
+                  <input class="clock-digits" id="tp-hour" type="text" inputmode="numeric"
+                         maxlength="2" value="08"
+                         onfocus="clockInputFocus(this)"
+                         onblur="clockHourBlur(this)"
+                         onkeydown="clockHourKey(event,this)"
+                         oninput="clockHourInput(this)" />
                   <button class="clock-arrow" onclick="adjustHour(-1)">▼</button>
                   <div class="clock-unit">Hour</div>
                 </div>
                 <div class="clock-sep">:</div>
                 <div class="clock-col">
                   <button class="clock-arrow" onclick="adjustMin(1)">▲</button>
-                  <div class="clock-digits" id="tp-min">00</div>
+                  <input class="clock-digits" id="tp-min" type="text" inputmode="numeric"
+                         maxlength="2" value="00"
+                         onfocus="clockInputFocus(this)"
+                         onblur="clockMinBlur(this)"
+                         onkeydown="clockMinKey(event,this)"
+                         oninput="clockMinInput(this)" />
                   <button class="clock-arrow" onclick="adjustMin(-1)">▼</button>
                   <div class="clock-unit">Min</div>
                 </div>
@@ -763,6 +788,7 @@
                   <button class="ampm-btn" id="ampm-pm" onclick="setAmPm('pm')">PM</button>
                 </div>
               </div>
+              <div class="clk-hint">Click digits to type · ▲▼ or ↑↓ to adjust</div>
             </div>
             <button class="picker-confirm" onclick="confirmTime()">Set Time</button>
           </div>
@@ -1379,6 +1405,9 @@ function toggleTimePicker() {
 }
 
 function adjustHour(d) {
+  // Sync from input in case user typed something
+  const inp = document.getElementById('tp-hour');
+  if (inp) { const n = parseInt(inp.value); if (!isNaN(n) && n >= 1 && n <= 12) tpHour = n; }
   tpHour += d;
   if (tpHour > 12) tpHour = 1;
   if (tpHour < 1)  tpHour = 12;
@@ -1386,6 +1415,8 @@ function adjustHour(d) {
 }
 
 function adjustMin(d) {
+  const inp = document.getElementById('tp-min');
+  if (inp) { const n = parseInt(inp.value); if (!isNaN(n) && n >= 0 && n <= 59) tpMin = n; }
   tpMin += d;
   if (tpMin >= 60) tpMin = 0;
   if (tpMin < 0)   tpMin = 59;
@@ -1398,13 +1429,83 @@ function setAmPm(p) {
 }
 
 function renderClock() {
-  document.getElementById('tp-hour').textContent = String(tpHour).padStart(2,'0');
-  document.getElementById('tp-min').textContent  = String(tpMin).padStart(2,'0');
+  document.getElementById('tp-hour').value = String(tpHour).padStart(2,'0');
+  document.getElementById('tp-min').value  = String(tpMin).padStart(2,'0');
   document.getElementById('ampm-am').classList.toggle('active', tpPeriod === 'am');
   document.getElementById('ampm-pm').classList.toggle('active', tpPeriod === 'pm');
 }
 
+// ── Clock keyboard editing ──
+function clockInputFocus(el) {
+  // Select all on focus so user can just type the new value
+  setTimeout(() => el.select(), 0);
+}
+
+function clockHourKey(e, el) {
+  // Allow: digits, backspace, tab, arrows, enter
+  if (e.key === 'ArrowUp')   { e.preventDefault(); adjustHour(1); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); adjustHour(-1); return; }
+  if (e.key === 'Enter' || e.key === 'Tab') { clockHourBlur(el); return; }
+  if (!/^\d$/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') {
+    e.preventDefault();
+  }
+}
+
+function clockHourInput(el) {
+  const v = el.value.replace(/\D/g,'');
+  el.value = v;
+  // Auto-advance to minutes when 2 digits entered and value is valid
+  if (v.length === 2) {
+    const n = parseInt(v);
+    if (n >= 1 && n <= 12) {
+      tpHour = n;
+      document.getElementById('tp-min').focus();
+    }
+  }
+}
+
+function clockHourBlur(el) {
+  let n = parseInt(el.value) || tpHour;
+  if (n < 1)  n = 1;
+  if (n > 12) n = 12;
+  tpHour = n;
+  el.value = String(n).padStart(2,'0');
+}
+
+function clockMinKey(e, el) {
+  if (e.key === 'ArrowUp')   { e.preventDefault(); adjustMin(1); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); adjustMin(-1); return; }
+  if (e.key === 'Enter') { clockMinBlur(el); el.blur(); return; }
+  if (!/^\d$/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') {
+    e.preventDefault();
+  }
+}
+
+function clockMinInput(el) {
+  const v = el.value.replace(/\D/g,'');
+  el.value = v;
+  if (v.length === 2) {
+    const n = parseInt(v);
+    if (n >= 0 && n <= 59) {
+      tpMin = n;
+    }
+  }
+}
+
+function clockMinBlur(el) {
+  let n = parseInt(el.value);
+  if (isNaN(n) || n < 0) n = 0;
+  if (n > 59) n = 59;
+  tpMin = n;
+  el.value = String(n).padStart(2,'0');
+}
+
 function confirmTime() {
+  // Flush any typed-but-not-blurred values
+  const hInp = document.getElementById('tp-hour');
+  const mInp = document.getElementById('tp-min');
+  if (hInp) clockHourBlur(hInp);
+  if (mInp) clockMinBlur(mInp);
   applyTimeValue();
   closeAllPickers();
 }
