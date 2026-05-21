@@ -220,10 +220,114 @@
     line-height: 1.35; margin-bottom: 3px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  /* When module is the secondary line */
+  .task-module.secondary {
+    font-size: 12px; font-weight: 400; color: var(--muted);
+  }
 
   .task-info {
     font-size: 13px; color: var(--muted); line-height: 1.4;
   }
+  /* When info is the primary (highlighted) line */
+  .task-info.primary {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin-bottom: 3px; line-height: 1.35;
+  }
+
+  /* ── Task description panel (right side) ── */
+  .task-desc {
+    flex: 0 0 180px; min-width: 0;
+    border-left: 1px solid var(--border);
+    padding-left: 14px; align-self: stretch;
+    display: flex; align-items: center;
+    font-size: 12px; color: #a8b0c8; line-height: 1.6;
+  }
+  .task-desc-inner { width: 100%; }
+  .task-desc b, .task-desc strong { color: #d4d8e8; font-weight: 600; }
+  .task-desc i, .task-desc em     { font-style: italic; }
+  .task-desc u                    { text-decoration: underline; }
+
+  /* ── Highlight switch (form) ── */
+  .form-label-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .form-label-row .form-label { margin-bottom: 0; }
+  .hi-switch {
+    display: flex; align-items: center; gap: 7px;
+    cursor: pointer; user-select: none;
+  }
+  .hi-switch-label { font-size: 11px; color: var(--muted); }
+  .hi-switch input { display: none; }
+  .hi-switch-track {
+    width: 30px; height: 16px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    position: relative; transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+  .hi-switch-track::after {
+    content: ''; position: absolute;
+    top: 2px; left: 2px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--muted); transition: transform 0.2s, background 0.2s;
+  }
+  .hi-switch input:checked + .hi-switch-track {
+    background: rgba(102,126,234,0.25); border-color: var(--accent);
+  }
+  .hi-switch input:checked + .hi-switch-track::after {
+    transform: translateX(14px); background: var(--accent);
+  }
+
+  /* ── Description editor (form) ── */
+  .desc-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0;
+  }
+  .desc-toggle-btn {
+    font-size: 11px; font-weight: 600; padding: 4px 11px;
+    border-radius: 20px; cursor: pointer;
+    border: 1px solid var(--border2); background: var(--surface2);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .desc-toggle-btn:hover { border-color: var(--accent); color: #a5b4fc; background: rgba(102,126,234,0.1); }
+  .desc-toggle-btn.active { border-color: rgba(72,187,120,0.5); color: #68d391; background: rgba(72,187,120,0.08); }
+
+  .desc-editor-wrap {
+    margin-top: 8px;
+    border: 1px solid var(--border2); border-radius: var(--radius);
+    overflow: hidden; background: var(--bg);
+  }
+  .desc-toolbar {
+    display: flex; gap: 2px; padding: 5px 6px;
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  .desc-fmt-btn {
+    width: 26px; height: 24px; border-radius: 5px; cursor: pointer;
+    border: 1px solid transparent; background: none;
+    color: var(--muted); font-size: 12px; font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+  .desc-fmt-btn:hover { background: var(--surface); border-color: var(--border2); color: var(--text); }
+  .desc-fmt-btn.active { background: rgba(102,126,234,0.18); border-color: rgba(102,126,234,0.4); color: #a5b4fc; }
+  .desc-fmt-btn b { font-weight: 700; font-size: 13px; }
+  .desc-fmt-btn i { font-style: italic; }
+  .desc-fmt-btn u { text-decoration: underline; }
+  .desc-toolbar-sep { width: 1px; background: var(--border2); margin: 2px 3px; align-self: stretch; }
+
+  .desc-editor {
+    min-height: 64px; max-height: 120px; overflow-y: auto;
+    padding: 9px 12px; font-size: 13px; color: var(--text);
+    line-height: 1.6; outline: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .desc-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--faint); pointer-events: none;
+  }
+  .desc-editor:focus { box-shadow: inset 0 0 0 1px rgba(102,126,234,0.3); }
 
   /* ── Countdown chip ── */
   .countdown {
@@ -756,7 +860,14 @@
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">Task Information</label>
+      <div class="form-label-row">
+        <label class="form-label">Task Information</label>
+        <label class="hi-switch" title="Show module name as the primary title instead">
+          <span class="hi-switch-label">Highlight module</span>
+          <input type="checkbox" id="f-highlight-module" />
+          <span class="hi-switch-track"></span>
+        </label>
+      </div>
       <input class="form-input" id="f-info" type="text" placeholder="e.g. Assignment 02 — submit via LMS" />
     </div>
     <div class="form-row">
@@ -901,6 +1012,30 @@
           <div class="p-dot" style="background:var(--grn-dot)"></div>
           <div class="p-label">On Track</div>
         </button>
+      </div>
+    </div>
+
+    <!-- Task Description (optional) -->
+    <div class="form-group">
+      <div class="desc-section-header">
+        <label class="form-label" style="margin:0">Task Description <span class="end-time-optional">(optional)</span></label>
+        <button type="button" class="desc-toggle-btn" id="desc-toggle" onclick="toggleDesc()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add description
+        </button>
+      </div>
+      <div id="desc-editor-wrap" style="display:none">
+        <div class="desc-editor-wrap">
+          <div class="desc-toolbar">
+            <button class="desc-fmt-btn" id="dfmt-bold" onmousedown="event.preventDefault(); fmtDesc('bold')" title="Bold"><b>B</b></button>
+            <button class="desc-fmt-btn" id="dfmt-italic" onmousedown="event.preventDefault(); fmtDesc('italic')" title="Italic"><i>I</i></button>
+            <button class="desc-fmt-btn" id="dfmt-underline" onmousedown="event.preventDefault(); fmtDesc('underline')" title="Underline"><u>U</u></button>
+          </div>
+          <div class="desc-editor" id="f-desc" contenteditable="true"
+               data-placeholder="Brief notes or bullet points…"
+               onkeyup="syncDescFmtBtns()" onmouseup="syncDescFmtBtns()"></div>
+        </div>
+        <div style="font-size:10px; color:var(--faint); margin-top:4px; padding-left:2px;">Tip: Select text then press B / I / U to format</div>
       </div>
     </div>
 
@@ -1115,6 +1250,8 @@ function tickCountdowns() {
 function buildTaskCard(task, rank) {
   const p = task.priority;
   const dotColors = { red: "var(--red-dot)", yellow: "var(--yel-dot)", green: "var(--grn-dot)" };
+
+  // ── Time chip ──
   const timeChip = task.endTime
     ? `<span class="task-time-range">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1124,6 +1261,19 @@ function buildTaskCard(task, rank) {
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         ${escHtml(task.time)}
        </span>`;
+
+  // ── Title / subtitle swap ──
+  const hlModule = !!task.highlightModule;
+  const primaryText   = hlModule ? escHtml(task.module) : escHtml(task.info);
+  const secondaryText = hlModule ? escHtml(task.info)   : escHtml(task.module);
+  const primaryCls    = hlModule ? 'task-module' : 'task-info primary';
+  const secondaryCls  = hlModule ? 'task-module secondary' : 'task-info';
+
+  // ── Description panel ──
+  const descPanel = task.desc
+    ? `<div class="task-desc"><div class="task-desc-inner">${sanitizeDesc(task.desc)}</div></div>`
+    : '';
+
   return `
     <div class="task-card ${p}">
       <div class="task-rank">${rank}</div>
@@ -1139,10 +1289,11 @@ function buildTaskCard(task, rank) {
           </span>
           ${timeChip}
         </div>
-        <div class="task-module" title="${escHtml(task.info)}">${escHtml(task.info)}</div>
-        <div class="task-info">${escHtml(task.module)}</div>
+        <div class="${primaryCls}" title="${primaryText}">${primaryText}</div>
+        <div class="${secondaryCls}">${secondaryText}</div>
         <div class="countdown ${countdownClass(task)}" id="cd-${task.id}" data-date="${escHtml(task.date)}" data-time="${escHtml(task.time)}">${countdownHTML(task)}</div>
       </div>
+      ${descPanel}
       <div class="task-actions">
         <button class="icon-btn danger" onclick="deleteTask('${task.id}')" title="Delete task">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -1151,6 +1302,29 @@ function buildTaskCard(task, rank) {
         </button>
       </div>
     </div>`;
+}
+
+// Strip all tags except b/strong/i/em/u and br — safe subset for descriptions
+function sanitizeDesc(html) {
+  const allowed = /^(b|strong|i|em|u|br)$/i;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  function clean(node) {
+    [...node.childNodes].forEach(child => {
+      if (child.nodeType === 3) return; // text node — keep
+      if (child.nodeType === 1 && allowed.test(child.tagName)) {
+        // Remove all attributes from allowed tags
+        [...child.attributes].forEach(a => child.removeAttribute(a.name));
+        clean(child);
+      } else {
+        // Replace disallowed element with its text content
+        const text = document.createTextNode(child.textContent);
+        node.replaceChild(text, child);
+      }
+    });
+  }
+  clean(tmp);
+  return tmp.innerHTML;
 }
 
 // ── Add task ──
@@ -1180,6 +1354,18 @@ function clearForm() {
   sel.classList.remove("error");
   const info = document.getElementById("f-info");
   info.value = ""; info.classList.remove("error");
+
+  // Reset highlight switch
+  document.getElementById('f-highlight-module').checked = false;
+
+  // Reset description
+  useDesc = false;
+  document.getElementById('desc-editor-wrap').style.display = 'none';
+  document.getElementById('f-desc').innerHTML = '';
+  const descBtn = document.getElementById('desc-toggle');
+  descBtn.classList.remove('active');
+  descBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add description`;
+
   // Reset end time
   useEndTime = false;
   document.getElementById('end-time-picker-row').style.display = 'none';
@@ -1194,11 +1380,14 @@ function clearForm() {
 }
 
 async function addTask() {
-  const module = document.getElementById("f-module").value.trim();
-  const info   = document.getElementById("f-info").value.trim();
-  const date   = document.getElementById("f-date").value.trim();
-  const time   = document.getElementById("f-time").value.trim();
-  const endTime = useEndTime ? (document.getElementById("f-end-time").value.trim() || '') : '';
+  const module          = document.getElementById("f-module").value.trim();
+  const info            = document.getElementById("f-info").value.trim();
+  const date            = document.getElementById("f-date").value.trim();
+  const time            = document.getElementById("f-time").value.trim();
+  const endTime         = useEndTime ? (document.getElementById("f-end-time").value.trim() || '') : '';
+  const highlightModule = document.getElementById("f-highlight-module").checked;
+  const rawDesc         = useDesc ? document.getElementById("f-desc").innerHTML.trim() : '';
+  const desc            = rawDesc && rawDesc !== '<br>' ? sanitizeDesc(rawDesc) : '';
 
   let valid = true;
   [["f-module", module], ["f-info", info]].forEach(([id, val]) => {
@@ -1215,7 +1404,9 @@ async function addTask() {
   btn.disabled = true; btn.textContent = "Saving…";
 
   const payload = { module, info, date, time, priority: selectedPriority, createdAt: Date.now() };
-  if (endTime) payload.endTime = endTime;
+  if (endTime)         payload.endTime         = endTime;
+  if (highlightModule) payload.highlightModule = true;
+  if (desc)            payload.desc            = desc;
 
   try {
     await tasksRef.push(payload);
@@ -1430,6 +1621,7 @@ let dpYear, dpMonth, dpSelectedDay, dpSelectedMonth, dpSelectedYear;
 let tpHour = 8, tpMin = 0, tpPeriod = 'am';
 let tpEndHour = 8, tpEndMin = 0, tpEndPeriod = 'pm';
 let useEndTime = false;
+let useDesc    = false;
 
 function initPickerDefaults() {
   const sl = nowSL();
@@ -1737,6 +1929,48 @@ function applyEndTimeValue() {
   document.getElementById('end-time-display').textContent = val;
   renderEndClock();
 }
+
+// ── Description toggle & editor ──
+function toggleDesc() {
+  useDesc = !useDesc;
+  const wrap = document.getElementById('desc-editor-wrap');
+  const btn  = document.getElementById('desc-toggle');
+  wrap.style.display = useDesc ? 'block' : 'none';
+  if (useDesc) {
+    btn.classList.add('active');
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg> Remove description`;
+    setTimeout(() => document.getElementById('f-desc').focus(), 50);
+  } else {
+    btn.classList.remove('active');
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add description`;
+    document.getElementById('f-desc').innerHTML = '';
+  }
+}
+
+function fmtDesc(cmd) {
+  document.getElementById('f-desc').focus();
+  document.execCommand(cmd, false, null);
+  syncDescFmtBtns();
+}
+
+function syncDescFmtBtns() {
+  ['bold','italic','underline'].forEach(cmd => {
+    const btn = document.getElementById('dfmt-' + cmd);
+    if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+  });
+}
+
+// Also handle keyboard shortcuts inside the editor
+document.addEventListener('keydown', e => {
+  if (!useDesc) return;
+  const editor = document.getElementById('f-desc');
+  if (document.activeElement !== editor) return;
+  if ((e.ctrlKey || e.metaKey)) {
+    if (e.key === 'b') { e.preventDefault(); fmtDesc('bold'); }
+    if (e.key === 'i') { e.preventDefault(); fmtDesc('italic'); }
+    if (e.key === 'u') { e.preventDefault(); fmtDesc('underline'); }
+  }
+});
 
 function closeAllPickers() {
   ['date-panel','time-panel','end-time-panel'].forEach(id => {
