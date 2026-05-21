@@ -152,7 +152,7 @@
   .section-header.red .section-dot { background: var(--red-dot); box-shadow: 0 0 6px var(--red-dot); }
   .section-header.yellow .section-label { color: var(--yel-txt); }
   .section-header.yellow .section-badge { background: var(--yel-bg); color: var(--yel-txt); border: 1px solid var(--yel-bd); }
-  .section-header.yellow .section-dot { baifckground: var(--yel-dot); box-shadow: 0 0 6px var(--yel-dot); }
+  .section-header.yellow .section-dot { background: var(--yel-dot); box-shadow: 0 0 6px var(--yel-dot); }
   .section-header.green .section-label { color: var(--grn-txt); }
   .section-header.green .section-badge { background: var(--grn-bg); color: var(--grn-txt); border: 1px solid var(--grn-bd); }
   .section-header.green .section-dot { background: var(--grn-dot); box-shadow: 0 0 6px var(--grn-dot); }
@@ -208,11 +208,12 @@
 
   .task-time-chip {
     display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; color: var(--muted);
-    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 11px; color: #d4d8e8;
+    background: var(--surface2); border: 1px solid rgba(255,255,255,0.13);
     padding: 2px 8px; border-radius: 6px;
     font-family: 'DM Mono', monospace;
   }
+  .task-time-chip svg { opacity: 0.7; }
 
   .task-module {
     font-size: 14px; font-weight: 600; color: var(--text);
@@ -438,6 +439,38 @@
     margin: 4px 0 2px; letter-spacing: 0.03em;
     font-family: 'DM Mono', monospace;
   }
+
+  /* ── End-time optional toggle ── */
+  .end-time-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0;
+  }
+  .end-time-optional {
+    font-size: 10px; color: var(--faint); font-weight: 400;
+    text-transform: none; letter-spacing: 0; margin-left: 5px;
+  }
+  .end-time-toggle-btn {
+    font-size: 11px; font-weight: 600; padding: 4px 11px;
+    border-radius: 20px; cursor: pointer;
+    border: 1px solid var(--border2); background: var(--surface2);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .end-time-toggle-btn:hover { border-color: var(--accent); color: #a5b4fc; background: rgba(102,126,234,0.1); }
+  .end-time-toggle-btn.active { border-color: rgba(245,101,101,0.5); color: #fc8181; background: rgba(245,101,101,0.08); }
+  .end-time-picker-row { margin-top: 8px; }
+
+  /* ── Time-range chip in task card ── */
+  .task-time-range {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; color: #d4d8e8;
+    background: var(--surface2); border: 1px solid rgba(255,255,255,0.13);
+    padding: 2px 9px; border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+  .task-time-range svg { opacity: 0.7; flex-shrink: 0; }
+  .task-time-range .tr-sep { color: var(--accent); font-size: 10px; margin: 0 1px; }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -795,6 +828,64 @@
         </div>
       </div>
     </div>
+
+    <!-- End Time (optional) -->
+    <div class="form-group">
+      <div class="end-time-header">
+        <label class="form-label" style="margin:0">End Time <span class="end-time-optional">(optional)</span></label>
+        <button type="button" class="end-time-toggle-btn" id="end-time-toggle" onclick="toggleEndTime()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add end time
+        </button>
+      </div>
+      <div class="end-time-picker-row" id="end-time-picker-row" style="display:none">
+        <div class="picker-wrap">
+          <input type="hidden" id="f-end-time" />
+          <button type="button" class="picker-btn" id="end-time-btn" onclick="toggleEndTimePicker()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="end-time-display">Select end time…</span>
+          </button>
+          <div class="picker-panel" id="end-time-panel">
+            <div class="clock-body">
+              <div class="clock-display">
+                <div class="clock-col">
+                  <button class="clock-arrow" onclick="adjustEndHour(1)">▲</button>
+                  <input class="clock-digits" id="etp-hour" type="text" inputmode="numeric"
+                         maxlength="2" value="08"
+                         onfocus="clockInputFocus(this)"
+                         onblur="clockEndHourBlur(this)"
+                         onkeydown="clockEndHourKey(event,this)"
+                         oninput="clockEndHourInput(this)" />
+                  <button class="clock-arrow" onclick="adjustEndHour(-1)">▼</button>
+                  <div class="clock-unit">Hour</div>
+                </div>
+                <div class="clock-sep">:</div>
+                <div class="clock-col">
+                  <button class="clock-arrow" onclick="adjustEndMin(1)">▲</button>
+                  <input class="clock-digits" id="etp-min" type="text" inputmode="numeric"
+                         maxlength="2" value="00"
+                         onfocus="clockInputFocus(this)"
+                         onblur="clockEndMinBlur(this)"
+                         onkeydown="clockEndMinKey(event,this)"
+                         oninput="clockEndMinInput(this)" />
+                  <button class="clock-arrow" onclick="adjustEndMin(-1)">▼</button>
+                  <div class="clock-unit">Min</div>
+                </div>
+              </div>
+              <div class="ampm-row">
+                <div class="ampm-toggle">
+                  <button class="ampm-btn" id="eampm-am" onclick="setEndAmPm('am')">AM</button>
+                  <button class="ampm-btn active" id="eampm-pm" onclick="setEndAmPm('pm')">PM</button>
+                </div>
+              </div>
+              <div class="clk-hint">Click digits to type · ▲▼ or ↑↓ to adjust</div>
+            </div>
+            <button class="picker-confirm" onclick="confirmEndTime()">Set End Time</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Priority Level</label>
       <div class="priority-selector">
@@ -1024,6 +1115,15 @@ function tickCountdowns() {
 function buildTaskCard(task, rank) {
   const p = task.priority;
   const dotColors = { red: "var(--red-dot)", yellow: "var(--yel-dot)", green: "var(--grn-dot)" };
+  const timeChip = task.endTime
+    ? `<span class="task-time-range">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${escHtml(task.time)}<span class="tr-sep">→</span>${escHtml(task.endTime)}
+       </span>`
+    : `<span class="task-time-chip">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${escHtml(task.time)}
+       </span>`;
   return `
     <div class="task-card ${p}">
       <div class="task-rank">${rank}</div>
@@ -1037,10 +1137,7 @@ function buildTaskCard(task, rank) {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             ${escHtml(task.date)}
           </span>
-          <span class="task-time-chip">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            ${escHtml(task.time)}
-          </span>
+          ${timeChip}
         </div>
         <div class="task-module" title="${escHtml(task.info)}">${escHtml(task.info)}</div>
         <div class="task-info">${escHtml(task.module)}</div>
@@ -1083,6 +1180,14 @@ function clearForm() {
   sel.classList.remove("error");
   const info = document.getElementById("f-info");
   info.value = ""; info.classList.remove("error");
+  // Reset end time
+  useEndTime = false;
+  document.getElementById('end-time-picker-row').style.display = 'none';
+  document.getElementById('f-end-time').value = '';
+  document.getElementById('end-time-display').textContent = 'Select end time…';
+  const toggleBtn = document.getElementById('end-time-toggle');
+  toggleBtn.classList.remove('active');
+  toggleBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add end time`;
   closeAllPickers();
   initPickerDefaults();
   selectPriority("red");
@@ -1093,6 +1198,7 @@ async function addTask() {
   const info   = document.getElementById("f-info").value.trim();
   const date   = document.getElementById("f-date").value.trim();
   const time   = document.getElementById("f-time").value.trim();
+  const endTime = useEndTime ? (document.getElementById("f-end-time").value.trim() || '') : '';
 
   let valid = true;
   [["f-module", module], ["f-info", info]].forEach(([id, val]) => {
@@ -1108,8 +1214,11 @@ async function addTask() {
   const btn = document.getElementById("submitBtn");
   btn.disabled = true; btn.textContent = "Saving…";
 
+  const payload = { module, info, date, time, priority: selectedPriority, createdAt: Date.now() };
+  if (endTime) payload.endTime = endTime;
+
   try {
-    await tasksRef.push({ module, info, date, time, priority: selectedPriority, createdAt: Date.now() });
+    await tasksRef.push(payload);
     closeModal();
     showToast("✅ Task added successfully!");
   } catch (e) {
@@ -1319,6 +1428,8 @@ const DAY_NAMES   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
 let dpYear, dpMonth, dpSelectedDay, dpSelectedMonth, dpSelectedYear;
 let tpHour = 8, tpMin = 0, tpPeriod = 'am';
+let tpEndHour = 8, tpEndMin = 0, tpEndPeriod = 'pm';
+let useEndTime = false;
 
 function initPickerDefaults() {
   const sl = nowSL();
@@ -1518,11 +1629,121 @@ function applyTimeValue() {
   renderClock();
 }
 
+// ── End-time toggle ──
+function toggleEndTime() {
+  useEndTime = !useEndTime;
+  const row = document.getElementById('end-time-picker-row');
+  const btn = document.getElementById('end-time-toggle');
+  row.style.display = useEndTime ? 'block' : 'none';
+  if (useEndTime) {
+    btn.classList.add('active');
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg> Remove end time`;
+    // Default end time to 1 hour after start time
+    let eh = tpHour + 1; let ep = tpPeriod;
+    if (eh > 12) { eh -= 12; ep = ep === 'am' ? 'pm' : 'am'; }
+    tpEndHour = eh; tpEndMin = tpMin; tpEndPeriod = ep;
+    renderEndClock();
+    applyEndTimeValue();
+  } else {
+    btn.classList.remove('active');
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add end time`;
+    document.getElementById('f-end-time').value = '';
+    document.getElementById('end-time-display').textContent = 'Select end time…';
+    closeAllPickers();
+  }
+}
+
+// ── End-time clock ──
+function toggleEndTimePicker() {
+  const panel = document.getElementById('end-time-panel');
+  const isOpen = panel.classList.contains('open');
+  closeAllPickers();
+  if (!isOpen) {
+    renderEndClock();
+    panel.classList.add('open');
+    document.getElementById('end-time-btn').classList.add('open');
+  }
+}
+
+function adjustEndHour(d) {
+  const inp = document.getElementById('etp-hour');
+  if (inp) { const n = parseInt(inp.value); if (!isNaN(n) && n >= 1 && n <= 12) tpEndHour = n; }
+  tpEndHour += d;
+  if (tpEndHour > 12) tpEndHour = 1;
+  if (tpEndHour < 1)  tpEndHour = 12;
+  renderEndClock();
+}
+
+function adjustEndMin(d) {
+  const inp = document.getElementById('etp-min');
+  if (inp) { const n = parseInt(inp.value); if (!isNaN(n) && n >= 0 && n <= 59) tpEndMin = n; }
+  tpEndMin += d;
+  if (tpEndMin >= 60) tpEndMin = 0;
+  if (tpEndMin < 0)   tpEndMin = 59;
+  renderEndClock();
+}
+
+function setEndAmPm(p) { tpEndPeriod = p; renderEndClock(); }
+
+function renderEndClock() {
+  document.getElementById('etp-hour').value = String(tpEndHour).padStart(2,'0');
+  document.getElementById('etp-min').value  = String(tpEndMin).padStart(2,'0');
+  document.getElementById('eampm-am').classList.toggle('active', tpEndPeriod === 'am');
+  document.getElementById('eampm-pm').classList.toggle('active', tpEndPeriod === 'pm');
+}
+
+function clockEndHourKey(e, el) {
+  if (e.key === 'ArrowUp')   { e.preventDefault(); adjustEndHour(1); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); adjustEndHour(-1); return; }
+  if (e.key === 'Enter' || e.key === 'Tab') { clockEndHourBlur(el); return; }
+  if (!/^\d$/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') e.preventDefault();
+}
+function clockEndHourInput(el) {
+  const v = el.value.replace(/\D/g,''); el.value = v;
+  if (v.length === 2) { const n = parseInt(v); if (n >= 1 && n <= 12) { tpEndHour = n; document.getElementById('etp-min').focus(); } }
+}
+function clockEndHourBlur(el) {
+  let n = parseInt(el.value) || tpEndHour;
+  if (n < 1) n = 1; if (n > 12) n = 12;
+  tpEndHour = n; el.value = String(n).padStart(2,'0');
+}
+function clockEndMinKey(e, el) {
+  if (e.key === 'ArrowUp')   { e.preventDefault(); adjustEndMin(1); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); adjustEndMin(-1); return; }
+  if (e.key === 'Enter') { clockEndMinBlur(el); el.blur(); return; }
+  if (!/^\d$/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') e.preventDefault();
+}
+function clockEndMinInput(el) {
+  const v = el.value.replace(/\D/g,''); el.value = v;
+  if (v.length === 2) { const n = parseInt(v); if (n >= 0 && n <= 59) tpEndMin = n; }
+}
+function clockEndMinBlur(el) {
+  let n = parseInt(el.value); if (isNaN(n) || n < 0) n = 0; if (n > 59) n = 59;
+  tpEndMin = n; el.value = String(n).padStart(2,'0');
+}
+
+function confirmEndTime() {
+  const hInp = document.getElementById('etp-hour');
+  const mInp = document.getElementById('etp-min');
+  if (hInp) clockEndHourBlur(hInp);
+  if (mInp) clockEndMinBlur(mInp);
+  applyEndTimeValue();
+  closeAllPickers();
+}
+
+function applyEndTimeValue() {
+  const val = `${tpEndHour}.${String(tpEndMin).padStart(2,'0')} ${tpEndPeriod}`;
+  document.getElementById('f-end-time').value = val;
+  document.getElementById('end-time-display').textContent = val;
+  renderEndClock();
+}
+
 function closeAllPickers() {
-  ['date-panel','time-panel'].forEach(id => {
-    document.getElementById(id).classList.remove('open');
+  ['date-panel','time-panel','end-time-panel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
   });
-  ['date-btn','time-btn'].forEach(id => {
+  ['date-btn','time-btn','end-time-btn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('open');
   });
