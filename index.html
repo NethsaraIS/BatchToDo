@@ -387,6 +387,7 @@
     font-size: 15px; transition: all 0.15s;
   }
   .icon-btn:hover { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+  .icon-btn.edit:hover  { background: rgba(102,126,234,0.12); border-color: rgba(102,126,234,0.35); color: #a5b4fc; }
   .icon-btn.danger:hover { background: var(--red-bg); border-color: var(--red-bd); color: var(--red-txt); }
 
   /* ── Empty state ── */
@@ -744,6 +745,16 @@
   .cal-day.selected { background: var(--accent); color: #fff; font-weight: 600; }
   .cal-day.selected:hover { background: var(--accent2); }
   .cal-day.past { color: var(--faint); opacity: 0.5; }
+  .cal-day.focused { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  /* ── Ensure the date panel is always wide enough to show all 7 columns ── */
+  #date-panel { min-width: 272px; }
+
+  /* keyboard hint inside calendar */
+  .cal-key-hint {
+    text-align: center; font-size: 10px; color: var(--faint);
+    padding: 0 10px 8px; font-family: 'DM Mono', monospace; letter-spacing: 0.02em;
+  }
 
   /* ── Digital Clock ── */
   .clk-wrap { padding: 16px; }
@@ -866,7 +877,7 @@
 <!-- ── Add Task Modal ── -->
 <div class="overlay" id="modal" style="display:none" onclick="handleOverlayClick(event)">
   <div class="modal">
-    <div class="modal-title"><span>✏️</span> Add New Task</div>
+    <div class="modal-title" id="modal-title"><span>✏️</span> Add New Task</div>
 
     <div class="form-group">
       <label class="form-label">Module Name</label>
@@ -909,7 +920,8 @@
               <span class="cal-month-label" id="cal-month-label"></span>
               <button class="cal-nav" onclick="calNext()">&#8250;</button>
             </div>
-            <div class="cal-grid" id="cal-grid"></div>
+            <div class="cal-grid" id="cal-grid" tabindex="0" onkeydown="calKeyDown(event)" style="outline:none"></div>
+            <div class="cal-key-hint">↑↓ week &nbsp;·&nbsp; ←→ day &nbsp;·&nbsp; PgUp/PgDn month &nbsp;·&nbsp; Enter confirm</div>
           </div>
         </div>
       </div>
@@ -1064,7 +1076,7 @@
 
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-submit" id="submitBtn" onclick="addTask()">Add Task</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitTask()">Add Task</button>
     </div>
   </div>
 </div>
@@ -1098,7 +1110,8 @@ const PRIORITY_LABEL = { red: "Urgent", yellow: "Moderate", green: "On Track" };
 
 let db, tasksRef;
 let selectedPriority = "red";
-let confirmDeleteId = null;
+let confirmDeleteId  = null;
+let editingTaskId    = null;   // null = add mode, string = edit mode
 
 // ── Bootstrap ──
 function init() {
@@ -1318,6 +1331,12 @@ function buildTaskCard(task, rank) {
       </div>
       ${descPanel}
       <div class="task-actions">
+        <button class="icon-btn edit" onclick="openEditModal('${task.id}')" title="Edit task">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
         <button class="icon-btn danger" onclick="deleteTask('${task.id}')" title="Delete task">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
@@ -1352,6 +1371,9 @@ function sanitizeDesc(html) {
 
 // ── Add task ──
 function openModal() {
+  editingTaskId = null;
+  document.getElementById("modal-title").innerHTML = '<span>✏️</span> Add New Task';
+  document.getElementById("submitBtn").textContent  = 'Add Task';
   document.getElementById("modal").style.display = "flex";
   initPickerDefaults();
 }
@@ -1372,37 +1394,14 @@ function selectPriority(level) {
 }
 
 function clearForm() {
-  const sel = document.getElementById("f-module");
-  sel.selectedIndex = 0;
-  sel.classList.remove("error");
-  const info = document.getElementById("f-info");
-  info.value = ""; info.classList.remove("error");
-
-  // Reset highlight switch
-  document.getElementById('f-highlight-module').checked = false;
-
-  // Reset description
-  useDesc = false;
-  document.getElementById('desc-editor-wrap').style.display = 'none';
-  document.getElementById('f-desc').innerHTML = '';
-  const descBtn = document.getElementById('desc-toggle');
-  descBtn.classList.remove('active');
-  descBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add description`;
-
-  // Reset end time
-  useEndTime = false;
-  document.getElementById('end-time-picker-row').style.display = 'none';
-  document.getElementById('f-end-time').value = '';
-  document.getElementById('end-time-display').textContent = 'Select end time…';
-  const toggleBtn = document.getElementById('end-time-toggle');
-  toggleBtn.classList.remove('active');
-  toggleBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add end time`;
-  closeAllPickers();
-  initPickerDefaults();
-  selectPriority("red");
+  editingTaskId = null;
+  document.getElementById("modal-title").innerHTML = '<span>✏️</span> Add New Task';
+  document.getElementById("submitBtn").textContent  = 'Add Task';
+  clearFormFields();
 }
 
-async function addTask() {
+// ── Collect & validate form values ──
+function collectForm() {
   const module          = document.getElementById("f-module").value.trim();
   const info            = document.getElementById("f-info").value.trim();
   const date            = document.getElementById("f-date").value.trim();
@@ -1411,7 +1410,10 @@ async function addTask() {
   const highlightModule = document.getElementById("f-highlight-module").checked;
   const rawDesc         = useDesc ? document.getElementById("f-desc").innerHTML.trim() : '';
   const desc            = rawDesc && rawDesc !== '<br>' ? sanitizeDesc(rawDesc) : '';
+  return { module, info, date, time, endTime, highlightModule, desc };
+}
 
+function validateForm({ module, info, date, time }) {
   let valid = true;
   [["f-module", module], ["f-info", info]].forEach(([id, val]) => {
     if (!val) { document.getElementById(id).classList.add("error"); valid = false; }
@@ -1421,24 +1423,163 @@ async function addTask() {
   else        { document.getElementById("date-btn").classList.remove("error"); }
   if (!time)  { document.getElementById("time-btn").classList.add("error"); valid = false; }
   else         { document.getElementById("time-btn").classList.remove("error"); }
-  if (!valid) return;
+  return valid;
+}
+
+function buildPayload({ module, info, date, time, endTime, highlightModule, desc }, preserveCreatedAt) {
+  const payload = { module, info, date, time, priority: selectedPriority };
+  if (preserveCreatedAt != null) payload.createdAt = preserveCreatedAt;
+  else payload.createdAt = Date.now();
+  if (endTime)         payload.endTime         = endTime;
+  if (highlightModule) payload.highlightModule = true;
+  if (desc)            payload.desc            = desc;
+  return payload;
+}
+
+function submitTask() {
+  if (editingTaskId) saveEdit();
+  else               addTask();
+}
+
+async function addTask() {
+  const vals = collectForm();
+  if (!validateForm(vals)) return;
 
   const btn = document.getElementById("submitBtn");
   btn.disabled = true; btn.textContent = "Saving…";
 
-  const payload = { module, info, date, time, priority: selectedPriority, createdAt: Date.now() };
-  if (endTime)         payload.endTime         = endTime;
-  if (highlightModule) payload.highlightModule = true;
-  if (desc)            payload.desc            = desc;
-
   try {
-    await tasksRef.push(payload);
+    await tasksRef.push(buildPayload(vals));
     closeModal();
     showToast("✅ Task added successfully!");
   } catch (e) {
     showToast("❌ Failed to save task. Check connection.");
   }
   btn.disabled = false; btn.textContent = "Add Task";
+}
+
+async function saveEdit() {
+  const vals = collectForm();
+  if (!validateForm(vals)) return;
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+
+  try {
+    // Preserve original createdAt so sort order doesn't change
+    const snap = await tasksRef.child(editingTaskId).once('value');
+    const existing = snap.val() || {};
+    const payload = buildPayload(vals, existing.createdAt ?? Date.now());
+    await tasksRef.child(editingTaskId).set(payload);
+    closeModal();
+    showToast("✅ Task updated successfully!");
+  } catch (e) {
+    showToast("❌ Failed to update task. Check connection.");
+  }
+  btn.disabled = false; btn.textContent = "Save Changes";
+}
+
+// ── Open modal pre-filled for editing ──
+function openEditModal(id) {
+  // Find the task in the live snapshot cache
+  tasksRef.child(id).once('value').then(snap => {
+    const task = snap.val();
+    if (!task) { showToast("❌ Task not found."); return; }
+
+    // Set edit mode
+    editingTaskId = id;
+    document.getElementById("modal-title").innerHTML = '<span>🖊️</span> Edit Task';
+    document.getElementById("submitBtn").textContent  = 'Save Changes';
+    document.getElementById("modal").style.display = "flex";
+
+    // Clear first so all optional sections reset cleanly
+    clearFormFields();
+
+    // ── Module ──
+    const modSel = document.getElementById("f-module");
+    [...modSel.options].forEach(o => { if (o.value === task.module) o.selected = true; });
+
+    // ── Info ──
+    document.getElementById("f-info").value = task.info || '';
+
+    // ── Highlight switch ──
+    document.getElementById("f-highlight-module").checked = !!task.highlightModule;
+
+    // ── Date ──
+    if (task.date) {
+      const [dd, mm, yyyy] = task.date.split('/').map(Number);
+      dpSelectedDay = dd; dpSelectedMonth = mm - 1; dpSelectedYear = yyyy;
+      dpYear = yyyy; dpMonth = mm - 1;
+      applyDateValue();
+    }
+
+    // ── Start time ──
+    if (task.time) {
+      const parsed = parseTimeStr(task.time);
+      tpHour = parsed.h; tpMin = parsed.m; tpPeriod = parsed.p;
+      applyTimeValue();
+    }
+
+    // ── End time ──
+    if (task.endTime) {
+      useEndTime = true;
+      document.getElementById('end-time-picker-row').style.display = 'block';
+      const etBtn = document.getElementById('end-time-toggle');
+      etBtn.classList.add('active');
+      etBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg> Remove end time`;
+      const parsed = parseTimeStr(task.endTime);
+      tpEndHour = parsed.h; tpEndMin = parsed.m; tpEndPeriod = parsed.p;
+      applyEndTimeValue();
+    }
+
+    // ── Priority ──
+    selectPriority(task.priority || 'red');
+
+    // ── Description ──
+    if (task.desc) {
+      useDesc = true;
+      document.getElementById('desc-editor-wrap').style.display = 'block';
+      document.getElementById('f-desc').innerHTML = task.desc;
+      const dBtn = document.getElementById('desc-toggle');
+      dBtn.classList.add('active');
+      dBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg> Remove description`;
+    }
+  });
+}
+
+// Parse stored time string like "8.30 am" → {h:8, m:30, p:'am'}
+function parseTimeStr(str) {
+  const m = String(str).match(/(\d+)\.(\d+)\s*(am|pm)/i);
+  if (m) return { h: parseInt(m[1]), m: parseInt(m[2]), p: m[3].toLowerCase() };
+  return { h: 8, m: 0, p: 'am' };
+}
+
+// Reset only form field values without touching editingTaskId/title/button
+function clearFormFields() {
+  const sel = document.getElementById("f-module");
+  sel.selectedIndex = 0; sel.classList.remove("error");
+  const info = document.getElementById("f-info");
+  info.value = ""; info.classList.remove("error");
+  document.getElementById('f-highlight-module').checked = false;
+
+  useDesc = false;
+  document.getElementById('desc-editor-wrap').style.display = 'none';
+  document.getElementById('f-desc').innerHTML = '';
+  const descBtn = document.getElementById('desc-toggle');
+  descBtn.classList.remove('active');
+  descBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add description`;
+
+  useEndTime = false;
+  document.getElementById('end-time-picker-row').style.display = 'none';
+  document.getElementById('f-end-time').value = '';
+  document.getElementById('end-time-display').textContent = 'Select end time…';
+  const toggleBtn = document.getElementById('end-time-toggle');
+  toggleBtn.classList.remove('active');
+  toggleBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add end time`;
+
+  closeAllPickers();
+  initPickerDefaults();
+  selectPriority("red");
 }
 
 function deleteTask(id) {
@@ -1675,6 +1816,8 @@ function toggleDatePicker() {
     renderCalendar();
     panel.classList.add('open');
     document.getElementById('date-btn').classList.add('open');
+    // Give focus to grid so arrow keys work immediately
+    setTimeout(() => document.getElementById('cal-grid').focus(), 50);
   }
 }
 
@@ -1716,6 +1859,57 @@ function applyDateValue() {
   document.getElementById('f-date').value = val;
   document.getElementById('date-display').textContent = val;
   document.getElementById('date-btn').classList.remove('error');
+}
+
+// ── Calendar keyboard navigation ──
+function calKeyDown(e) {
+  const panel = document.getElementById('date-panel');
+  if (!panel.classList.contains('open')) return;
+
+  switch (e.key) {
+    case 'ArrowLeft':  e.preventDefault(); calMoveDay(-1);  break;
+    case 'ArrowRight': e.preventDefault(); calMoveDay(+1);  break;
+    case 'ArrowUp':    e.preventDefault(); calMoveDay(-7);  break;
+    case 'ArrowDown':  e.preventDefault(); calMoveDay(+7);  break;
+    case 'PageUp':     e.preventDefault(); calPrev();        break;
+    case 'PageDown':   e.preventDefault(); calNext();        break;
+    case 'Enter':
+    case ' ':
+      e.preventDefault();
+      // Confirm whatever is currently focused/selected and close
+      selectDay(dpSelectedDay);
+      break;
+    case 'Escape':
+      e.preventDefault();
+      closeAllPickers();
+      break;
+  }
+}
+
+function calMoveDay(delta) {
+  // Build a Date from current selection, shift by delta days
+  const cur = new Date(dpSelectedYear, dpSelectedMonth, dpSelectedDay);
+  cur.setDate(cur.getDate() + delta);
+
+  // Don't allow navigating into the past (before today)
+  const sl = nowSL();
+  const today = new Date(sl.getFullYear(), sl.getMonth(), sl.getDate());
+  if (cur < today) return;
+
+  dpSelectedDay   = cur.getDate();
+  dpSelectedMonth = cur.getMonth();
+  dpSelectedYear  = cur.getFullYear();
+
+  // If we've moved into a different month, update the view
+  if (dpSelectedMonth !== dpMonth || dpSelectedYear !== dpYear) {
+    dpMonth = dpSelectedMonth;
+    dpYear  = dpSelectedYear;
+  }
+
+  applyDateValue();
+  renderCalendar();
+  // Keep focus on the grid
+  document.getElementById('cal-grid').focus();
 }
 
 // ── Clock ──
