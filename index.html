@@ -247,6 +247,29 @@
   .task-desc i, .task-desc em     { font-style: italic; }
   .task-desc u                    { text-decoration: underline; }
 
+  /* ── Mobile portrait: stack description below the main content ── */
+  @media (max-width: 540px) and (orientation: portrait), (max-width: 480px) {
+    .task-card { flex-wrap: wrap; }
+
+    /* rank + body + actions stay on the first row */
+    .task-rank    { flex-shrink: 0; }
+    .task-body    { flex: 1; min-width: 0; }
+    .task-actions { flex-shrink: 0; }
+
+    /* description drops to its own full-width row */
+    .task-desc {
+      flex: 0 0 100%;           /* full width */
+      border-left: none;
+      border-top: 1px solid var(--border);
+      padding-left: 0;
+      padding-top: 10px;
+      margin-top: 6px;
+      align-self: auto;
+      /* indent to align under the task-body (rank width + gap) */
+      padding-left: calc(26px + 14px);
+    }
+  }
+
   /* ── Highlight switch (form) ── */
   .form-label-row {
     display: flex; align-items: center; justify-content: space-between;
