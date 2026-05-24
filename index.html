@@ -270,7 +270,32 @@
     }
   }
 
-  /* ── Highlight switch (form) ── */
+  /* ── Module combo-box ── */
+  .combo-wrap { position: relative; }
+  .combo-input { width: 100%; cursor: text; }
+  .combo-dropdown {
+    display: none;
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 300;
+    background: #161929; border: 1px solid var(--border2);
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    max-height: 220px; overflow-y: auto;
+    animation: pickerIn 0.13s ease;
+  }
+  .combo-dropdown.open { display: block; }
+  .combo-option {
+    padding: 9px 13px; font-size: 13px; color: var(--text);
+    cursor: pointer; transition: background 0.1s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .combo-option:hover, .combo-option.active {
+    background: rgba(102,126,234,0.15); color: #a5b4fc;
+  }
+  .combo-option.hidden { display: none; }
+  .combo-no-match {
+    padding: 9px 13px; font-size: 12px; color: var(--faint);
+    font-style: italic; font-family: 'DM Sans', sans-serif;
+  }
   .form-label-row {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 6px;
@@ -881,17 +906,24 @@
 
     <div class="form-group">
       <label class="form-label">Module Name</label>
-      <select class="form-input" id="f-module">
-        <option value="" disabled selected>Select a module…</option>
-        <option>Linear Algebra</option>
-        <option>Kinetics of Materials</option>
-        <option>Fundamentals of Machine Elements Design</option>
-        <option>Applied Statistics</option>
-        <option>Mechanics of Machines</option>
-        <option>Ceramic Engineering</option>
-        <option>Solid State Materials</option>
-        <option>Polymer Engineering</option>
-      </select>
+      <div class="combo-wrap" id="combo-wrap">
+        <input class="form-input combo-input" id="f-module" type="text"
+               placeholder="Select or type a module name…"
+               autocomplete="off"
+               oninput="comboFilter()"
+               onfocus="comboOpen()"
+               onkeydown="comboKey(event)" />
+        <div class="combo-dropdown" id="combo-dropdown">
+          <div class="combo-option" data-val="Linear Algebra">Linear Algebra</div>
+          <div class="combo-option" data-val="Kinetics of Materials">Kinetics of Materials</div>
+          <div class="combo-option" data-val="Fundamentals of Machine Elements Design">Fundamentals of Machine Elements Design</div>
+          <div class="combo-option" data-val="Applied Statistics">Applied Statistics</div>
+          <div class="combo-option" data-val="Mechanics of Machines">Mechanics of Machines</div>
+          <div class="combo-option" data-val="Ceramic Engineering">Ceramic Engineering</div>
+          <div class="combo-option" data-val="Solid State Materials">Solid State Materials</div>
+          <div class="combo-option" data-val="Polymer Engineering">Polymer Engineering</div>
+        </div>
+      </div>
     </div>
     <div class="form-group">
       <div class="form-label-row">
@@ -1496,8 +1528,9 @@ function openEditModal(id) {
     clearFormFields();
 
     // ── Module ──
-    const modSel = document.getElementById("f-module");
-    [...modSel.options].forEach(o => { if (o.value === task.module) o.selected = true; });
+    const modInput = document.getElementById("f-module");
+    modInput.value = task.module || '';
+    modInput.classList.remove('error');
 
     // ── Info ──
     document.getElementById("f-info").value = task.info || '';
@@ -1557,7 +1590,8 @@ function parseTimeStr(str) {
 // Reset only form field values without touching editingTaskId/title/button
 function clearFormFields() {
   const sel = document.getElementById("f-module");
-  sel.selectedIndex = 0; sel.classList.remove("error");
+  sel.value = ''; sel.classList.remove("error");
+  comboClose();
   const info = document.getElementById("f-info");
   info.value = ""; info.classList.remove("error");
   document.getElementById('f-highlight-module').checked = false;
@@ -2187,6 +2221,109 @@ document.addEventListener('keydown', e => {
     if (e.key === 'i') { e.preventDefault(); fmtDesc('italic'); }
     if (e.key === 'u') { e.preventDefault(); fmtDesc('underline'); }
   }
+});
+
+// ── Module combo-box ──
+let comboActiveIdx = -1;
+
+function comboOpen() {
+  comboFilter();
+  document.getElementById('combo-dropdown').classList.add('open');
+  comboActiveIdx = -1;
+}
+
+function comboClose() {
+  document.getElementById('combo-dropdown').classList.remove('open');
+  comboActiveIdx = -1;
+}
+
+function comboFilter() {
+  const q = document.getElementById('f-module').value.toLowerCase();
+  const dropdown = document.getElementById('combo-dropdown');
+  const options  = [...dropdown.querySelectorAll('.combo-option')];
+  // Remove any existing "no match" notice
+  dropdown.querySelectorAll('.combo-no-match').forEach(el => el.remove());
+
+  let visible = 0;
+  options.forEach(opt => {
+    const matches = opt.dataset.val.toLowerCase().includes(q);
+    opt.classList.toggle('hidden', !matches);
+    if (matches) visible++;
+  });
+
+  // Show "use custom name" hint when nothing matches and user has typed something
+  if (visible === 0 && q.length > 0) {
+    const hint = document.createElement('div');
+    hint.className = 'combo-no-match';
+    hint.textContent = `↵ Press Enter to use "${document.getElementById('f-module').value}"`;
+    dropdown.appendChild(hint);
+  }
+
+  dropdown.classList.add('open');
+  comboActiveIdx = -1;
+  comboHighlight();
+}
+
+function comboHighlight() {
+  const dropdown = document.getElementById('combo-dropdown');
+  [...dropdown.querySelectorAll('.combo-option')].forEach((opt, i) => {
+    opt.classList.toggle('active', i === comboActiveIdx);
+    if (i === comboActiveIdx) opt.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+function comboKey(e) {
+  const dropdown = document.getElementById('combo-dropdown');
+  const options  = [...dropdown.querySelectorAll('.combo-option:not(.hidden)')];
+  if (!dropdown.classList.contains('open')) {
+    if (e.key === 'ArrowDown' || e.key === 'Enter') comboOpen();
+    return;
+  }
+  switch (e.key) {
+    case 'ArrowDown':
+      e.preventDefault();
+      comboActiveIdx = Math.min(comboActiveIdx + 1, options.length - 1);
+      comboHighlight();
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      comboActiveIdx = Math.max(comboActiveIdx - 1, -1);
+      comboHighlight();
+      break;
+    case 'Enter':
+      e.preventDefault();
+      if (comboActiveIdx >= 0 && options[comboActiveIdx]) {
+        comboSelect(options[comboActiveIdx].dataset.val);
+      } else {
+        // Accept whatever is typed as a custom module name
+        const typed = document.getElementById('f-module').value.trim();
+        if (typed) comboClose();
+      }
+      break;
+    case 'Escape':
+      e.preventDefault();
+      comboClose();
+      break;
+    case 'Tab':
+      // Accept top visible option on Tab if nothing typed is a full match
+      if (comboActiveIdx >= 0 && options[comboActiveIdx]) {
+        comboSelect(options[comboActiveIdx].dataset.val);
+      } else {
+        comboClose();
+      }
+      break;
+  }
+}
+
+function comboSelect(val) {
+  document.getElementById('f-module').value = val;
+  document.getElementById('f-module').classList.remove('error');
+  comboClose();
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#combo-wrap')) comboClose();
 });
 
 function closeAllPickers() {
