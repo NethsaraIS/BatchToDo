@@ -823,6 +823,127 @@
   }
   .clk-confirm:hover { opacity: 0.88; }
 
+  /* ── Header buttons ── */
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .ghost-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border2); border-radius: 8px;
+    padding: 9px 14px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .ghost-btn:hover { border-color: var(--accent); background: rgba(102,126,234,0.1); }
+  .ghost-btn .gb-badge {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    background: rgba(102,126,234,0.2); color: #a5b4fc;
+    padding: 1px 6px; border-radius: 10px;
+  }
+  @media (max-width: 540px) {
+    .header { padding: 14px 14px; }
+    .header-right .btn-label { display: none; }
+    .header-sub { display: none; }
+  }
+
+  /* ── Module-type colours ── */
+  :root {
+    --cmp-txt: #7dd3fc; --cmp-bg: rgba(125,211,252,0.10); --cmp-bd: rgba(125,211,252,0.28);
+    --ele-txt: #c4b5fd; --ele-bg: rgba(196,181,253,0.10); --ele-bd: rgba(196,181,253,0.28);
+    --rep-txt: #fdba74; --rep-bg: rgba(253,186,116,0.10); --rep-bd: rgba(253,186,116,0.28);
+  }
+  .type-tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .type-tag.compulsory { background: var(--cmp-bg); color: var(--cmp-txt); border: 1px solid var(--cmp-bd); }
+  .type-tag.elective   { background: var(--ele-bg); color: var(--ele-txt); border: 1px solid var(--ele-bd); }
+  .type-tag.repeat     { background: var(--rep-bg); color: var(--rep-txt); border: 1px solid var(--rep-bd); }
+
+  /* ── Filter bar ── */
+  .filter-bar { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .view-toggle {
+    display: flex; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 3px; gap: 3px;
+  }
+  .view-opt {
+    flex: 1; padding: 8px 10px; border-radius: 7px; border: none; background: none;
+    color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .view-opt:hover { color: var(--text); }
+  .view-opt.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .type-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .type-chip {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border2); background: var(--surface);
+    color: var(--muted); font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .type-chip:hover { border-color: var(--accent); color: var(--text); }
+  .type-chip.active { background: rgba(102,126,234,0.16); border-color: var(--accent); color: #c7d2fe; }
+  .type-chip .tc-n { font-family: 'DM Mono', monospace; font-size: 10px; opacity: 0.7; margin-left: 4px; }
+  .profile-hint {
+    font-size: 12px; color: var(--muted); background: var(--surface);
+    border: 1px dashed var(--border2); border-radius: 10px; padding: 10px 12px; line-height: 1.5;
+  }
+  .profile-hint b { color: var(--text); }
+  .profile-hint a { color: #a5b4fc; cursor: pointer; text-decoration: underline; }
+
+  /* ── Combo group labels ── */
+  .combo-group {
+    padding: 7px 13px 4px; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint);
+    font-family: 'DM Sans', sans-serif; background: rgba(0,0,0,0.18);
+  }
+  .combo-group.hidden { display: none; }
+  .module-type-hint { margin-top: 6px; font-size: 11px; color: var(--muted); min-height: 16px; }
+
+  /* ── Profile modal ── */
+  .modal.wide { max-width: 520px; max-height: 90vh; overflow-y: auto; }
+  .prof-section { margin-bottom: 18px; }
+  .prof-title {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+  }
+  .prof-count { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: none; letter-spacing: 0; }
+  .prof-count.ok  { color: var(--grn-txt); }
+  .prof-count.bad { color: var(--red-txt); }
+  .prof-note { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 8px; }
+  .mod-list { display: flex; flex-direction: column; gap: 6px; }
+  .mod-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: var(--bg); border: 1px solid var(--border2); border-radius: 8px;
+    cursor: pointer; font-size: 13px; transition: all 0.15s; user-select: none;
+  }
+  .mod-row:hover { border-color: var(--accent); }
+  .mod-row.checked { background: rgba(196,181,253,0.08); border-color: rgba(196,181,253,0.45); }
+  .mod-row input { accent-color: #8b7cf6; width: 15px; height: 15px; flex-shrink: 0; }
+  .mod-row.static { cursor: default; }
+  .mod-row.static:hover { border-color: var(--border2); }
+  .mod-row.static .type-tag { margin-left: auto; }
+  .rep-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .rep-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--rep-bg); border: 1px solid var(--rep-bd); color: var(--rep-txt);
+    border-radius: 20px; padding: 4px 6px 4px 12px; font-size: 12px;
+  }
+  .rep-chip button {
+    background: none; border: none; color: inherit; cursor: pointer;
+    font-size: 14px; line-height: 1; width: 18px; height: 18px; border-radius: 50%;
+  }
+  .rep-chip button:hover { background: rgba(255,255,255,0.12); }
+  .rep-add { display: flex; gap: 6px; }
+  .rep-add .form-input { flex: 1; }
+  .rep-add button {
+    padding: 0 14px; border-radius: 8px; border: 1px solid var(--border2);
+    background: var(--surface2); color: var(--text); font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+  .rep-add button:hover { border-color: var(--accent); }
+  .rep-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .rep-suggest .type-chip { font-size: 11px; padding: 3px 10px; }
+
 </style>
 </head>
 <body>
@@ -850,12 +971,17 @@
       </div>
     </div>
   </div>
-  <button class="add-btn" onclick="openModal()">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-      <line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/>
-    </svg>
-    Add Task
-  </button>
+  <div class="header-right">
+    <button class="ghost-btn" onclick="openProfile()" title="Choose your electives and repeat/medical modules">
+      👤 <span class="btn-label">My Modules</span> <span class="gb-badge" id="profile-badge">0</span>
+    </button>
+    <button class="add-btn" onclick="openModal()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/>
+      </svg>
+      <span class="btn-label">Add Task</span>
+    </button>
+  </div>
 </header>
 
 <main class="main">
@@ -864,6 +990,15 @@
     ⚙️ <strong>Setup required:</strong> Open <code>index.html</code> and replace the
     <code>firebaseConfig</code> values with your own Firebase project credentials.
     See the comment at the top of the file for step-by-step instructions.
+  </div>
+
+  <div class="filter-bar">
+    <div class="view-toggle">
+      <button class="view-opt active" id="view-mine" onclick="setView('mine')">My Modules</button>
+      <button class="view-opt" id="view-all" onclick="setView('all')">All Batch Tasks</button>
+    </div>
+    <div class="type-chips" id="type-chips"></div>
+    <div class="profile-hint" id="profile-hint" style="display:none"></div>
   </div>
 
   <div class="stats">
@@ -913,17 +1048,9 @@
                oninput="comboFilter()"
                onfocus="comboOpen()"
                onkeydown="comboKey(event)" />
-        <div class="combo-dropdown" id="combo-dropdown">
-          <div class="combo-option" data-val="Linear Algebra">Linear Algebra</div>
-          <div class="combo-option" data-val="Kinetics of Materials">Kinetics of Materials</div>
-          <div class="combo-option" data-val="Fundamentals of Machine Elements Design">Fundamentals of Machine Elements Design</div>
-          <div class="combo-option" data-val="Applied Statistics">Applied Statistics</div>
-          <div class="combo-option" data-val="Mechanics of Machines">Mechanics of Machines</div>
-          <div class="combo-option" data-val="Ceramic Engineering">Ceramic Engineering</div>
-          <div class="combo-option" data-val="Solid State Materials">Solid State Materials</div>
-          <div class="combo-option" data-val="Polymer Engineering">Polymer Engineering</div>
-        </div>
+        <div class="combo-dropdown" id="combo-dropdown"></div>
       </div>
+      <div class="module-type-hint" id="module-type-hint"></div>
     </div>
     <div class="form-group">
       <div class="form-label-row">
@@ -1113,6 +1240,43 @@
   </div>
 </div>
 
+<!-- ── My Modules (student profile) Modal ── -->
+<div class="overlay" id="profile-modal" style="display:none" onclick="if(event.target===this) closeProfile()">
+  <div class="modal wide">
+    <div class="modal-title"><span>👤</span> My Modules</div>
+
+    <div class="prof-section">
+      <div class="prof-title">Compulsory <span class="type-tag compulsory">All students</span></div>
+      <div class="mod-list" id="prof-compulsory"></div>
+    </div>
+
+    <div class="prof-section">
+      <div class="prof-title">
+        Electives — choose at least 3
+        <span class="prof-count" id="prof-elective-count"></span>
+      </div>
+      <div class="mod-list" id="prof-electives"></div>
+    </div>
+
+    <div class="prof-section">
+      <div class="prof-title">Repeat / Medical modules <span class="type-tag repeat">Optional</span></div>
+      <div class="prof-note">Only if you have any. Type the module name exactly as it appears on tasks, or tap a suggestion.</div>
+      <div class="rep-chips" id="prof-rep-chips"></div>
+      <div class="rep-add">
+        <input class="form-input" id="prof-rep-input" type="text" placeholder="e.g. Engineering Mathematics II"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addRepeatFromInput();}" />
+        <button type="button" onclick="addRepeatFromInput()">Add</button>
+      </div>
+      <div class="rep-suggest" id="prof-rep-suggest"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" id="prof-cancel" onclick="closeProfile()">Cancel</button>
+      <button class="btn-submit" onclick="saveProfile()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -1192,7 +1356,8 @@ function listenToTasks() {
       const db2 = parseDeadline(b.date, b.time) || new Date(8640000000000000);
       return da - db2;
     });
-    renderTasks(tasks);
+    allTasks = tasks;
+    refreshView();
   });
 }
 
@@ -1206,8 +1371,11 @@ function renderTasks(tasks) {
   document.getElementById("cnt-green").textContent  = byPriority.green.length;
 
   if (tasks.length === 0) {
+    const msg = allTasks.length === 0
+      ? 'No tasks yet.<br>Be the first to add one!'
+      : 'No tasks match this view.<br>Try “All Batch Tasks” or a different filter.';
     document.getElementById("taskContainer").innerHTML =
-      `<div class="empty"><div class="empty-icon">📋</div><p>No tasks yet.<br>Be the first to add one!</p></div>`;
+      `<div class="empty"><div class="empty-icon">📋</div><p>${msg}</p></div>`;
     return;
   }
 
@@ -1351,6 +1519,7 @@ function buildTaskCard(task, rank) {
             <span class="bdot" style="background:${dotColors[p]}"></span>
             ${PRIORITY_LABEL[p]}
           </span>
+          <span class="type-tag ${getTaskType(task)}">${TYPE_LABEL[getTaskType(task)]}</span>
           <span class="task-time-chip">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             ${escHtml(task.date)}
@@ -1531,6 +1700,7 @@ function openEditModal(id) {
     const modInput = document.getElementById("f-module");
     modInput.value = task.module || '';
     modInput.classList.remove('error');
+    updateModuleHint();
 
     // ── Info ──
     document.getElementById("f-info").value = task.info || '';
@@ -1592,6 +1762,7 @@ function clearFormFields() {
   const sel = document.getElementById("f-module");
   sel.value = ''; sel.classList.remove("error");
   comboClose();
+  updateModuleHint();
   const info = document.getElementById("f-info");
   info.value = ""; info.classList.remove("error");
   document.getElementById('f-highlight-module').checked = false;
@@ -1642,7 +1813,8 @@ function useDemoMode() {
     info: "Mid Term Assignment : Imesh sir",
     date: "11/05/2026", time: "8.15 am", priority: "red", createdAt: 1
   }];
-  renderTasks(seed);
+  allTasks = seed;
+  refreshView();
 }
 
 
@@ -2244,12 +2416,23 @@ function comboFilter() {
   // Remove any existing "no match" notice
   dropdown.querySelectorAll('.combo-no-match').forEach(el => el.remove());
 
+  buildComboOptionsIfNeeded();
   let visible = 0;
-  options.forEach(opt => {
+  [...dropdown.querySelectorAll('.combo-option')].forEach(opt => {
     const matches = opt.dataset.val.toLowerCase().includes(q);
     opt.classList.toggle('hidden', !matches);
     if (matches) visible++;
   });
+  // Hide group labels whose options are all filtered out
+  dropdown.querySelectorAll('.combo-group').forEach(g => {
+    let n = g.nextElementSibling, any = false;
+    while (n && n.classList.contains('combo-option')) {
+      if (!n.classList.contains('hidden')) any = true;
+      n = n.nextElementSibling;
+    }
+    g.classList.toggle('hidden', !any);
+  });
+  updateModuleHint();
 
   // Show "use custom name" hint when nothing matches and user has typed something
   if (visible === 0 && q.length > 0) {
@@ -2266,7 +2449,7 @@ function comboFilter() {
 
 function comboHighlight() {
   const dropdown = document.getElementById('combo-dropdown');
-  [...dropdown.querySelectorAll('.combo-option')].forEach((opt, i) => {
+  [...dropdown.querySelectorAll('.combo-option:not(.hidden)')].forEach((opt, i) => {
     opt.classList.toggle('active', i === comboActiveIdx);
     if (i === comboActiveIdx) opt.scrollIntoView({ block: 'nearest' });
   });
@@ -2319,6 +2502,7 @@ function comboSelect(val) {
   document.getElementById('f-module').value = val;
   document.getElementById('f-module').classList.remove('error');
   comboClose();
+  updateModuleHint();
 }
 
 // Close dropdown on outside click
@@ -2342,7 +2526,193 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.picker-wrap')) closeAllPickers();
 });
 
+// ══════════════════════════════════════════
+//  MODULES, STUDENT PROFILE & FILTERING
+// ══════════════════════════════════════════
+// ✏️ Edit these lists each semester. Any module NOT listed here
+//    is treated as a Repeat / Medical module.
+const MODULES = {
+  compulsory: [
+    "Linear Algebra",
+    "Kinetics of Materials",
+    "Fundamentals of Machine Elements Design",
+    "Applied Statistics",
+    "Mechanics of Machines"
+  ],
+  elective: [
+    "Ceramic Engineering",
+    "Solid State Materials",
+    "Polymer Engineering"
+  ]
+};
+const MIN_ELECTIVES = 3;
+const TYPE_LABEL = { compulsory: "Compulsory", elective: "Elective", repeat: "Repeat / Medical" };
+const PROFILE_KEY = "batchTodoProfile_v1";
+
+let allTasks   = [];
+let viewMode   = "mine";   // "mine" | "all"
+let filterType = "all";    // "all" | "compulsory" | "elective" | "repeat"
+let profile    = loadProfile();
+let draft      = null;     // working copy while the profile modal is open
+
+const norm = s => String(s || "").trim().toLowerCase();
+
+function loadProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+    if (p && Array.isArray(p.electives) && Array.isArray(p.repeats)) {
+      if (p.view === "all" || p.view === "mine") viewMode = p.view;
+      return { electives: p.electives, repeats: p.repeats, setup: !!p.setup };
+    }
+  } catch (e) {}
+  return { electives: [], repeats: [], setup: false };
+}
+function persistProfile() {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...profile, view: viewMode })); } catch (e) {}
+}
+
+// Type of a task is always derived from its module name
+function moduleType(name) {
+  const n = norm(name);
+  if (MODULES.compulsory.some(m => norm(m) === n)) return "compulsory";
+  if (MODULES.elective.some(m => norm(m) === n))   return "elective";
+  return "repeat";
+}
+function getTaskType(task) { return moduleType(task.module); }
+
+function isMine(task) {
+  const t = getTaskType(task);
+  if (t === "compulsory") return true;
+  if (t === "elective")   return profile.electives.some(m => norm(m) === norm(task.module));
+  return profile.repeats.some(m => norm(m) === norm(task.module));
+}
+
+function knownRepeatModules() {
+  const seen = new Map();
+  allTasks.forEach(t => {
+    if (getTaskType(t) === "repeat" && t.module && !seen.has(norm(t.module))) seen.set(norm(t.module), t.module.trim());
+  });
+  profile.repeats.forEach(m => { if (!seen.has(norm(m))) seen.set(norm(m), m); });
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+// ── Main refresh: filter → render ──
+function refreshView() {
+  const base = viewMode === "mine" ? allTasks.filter(isMine) : allTasks.slice();
+  const counts = { all: base.length, compulsory: 0, elective: 0, repeat: 0 };
+  base.forEach(t => counts[getTaskType(t)]++);
+  const shown = filterType === "all" ? base : base.filter(t => getTaskType(t) === filterType);
+
+  document.getElementById("view-mine").classList.toggle("active", viewMode === "mine");
+  document.getElementById("view-all").classList.toggle("active", viewMode === "all");
+
+  const chips = [["all", "All"], ["compulsory", "Compulsory"], ["elective", "Elective"], ["repeat", "Repeat / Medical"]];
+  document.getElementById("type-chips").innerHTML = chips.map(([k, label]) =>
+    `<button class="type-chip ${filterType === k ? "active" : ""}" onclick="setTypeFilter('${k}')">${label}<span class="tc-n">${counts[k]}</span></button>`
+  ).join("");
+
+  const hint = document.getElementById("profile-hint");
+  if (!profile.setup) {
+    hint.style.display = "block";
+    hint.innerHTML = `You haven't chosen your electives yet, so “My Modules” only shows <b>compulsory</b> tasks. <a onclick="openProfile()">Set up My Modules</a>`;
+  } else { hint.style.display = "none"; }
+
+  document.getElementById("profile-badge").textContent =
+    MODULES.compulsory.length + profile.electives.length + profile.repeats.length;
+
+  renderTasks(shown);
+}
+function setView(v) { viewMode = v; persistProfile(); refreshView(); }
+function setTypeFilter(t) { filterType = t; refreshView(); }
+
+// ── Add-task combo box: grouped options ──
+function buildComboOptionsIfNeeded() {
+  const dd = document.getElementById("combo-dropdown");
+  const rep = knownRepeatModules();
+  const sig = JSON.stringify([MODULES, rep]);
+  if (dd.dataset.sig === sig) return;
+  dd.dataset.sig = sig;
+  const opts = list => list.map(m => `<div class="combo-option" data-val="${escHtml(m)}" onmousedown="event.preventDefault()" onclick="comboSelect(this.dataset.val)">${escHtml(m)}</div>`).join("");
+  dd.innerHTML =
+    `<div class="combo-group">Compulsory</div>${opts(MODULES.compulsory)}` +
+    `<div class="combo-group">Elective</div>${opts(MODULES.elective)}` +
+    (rep.length ? `<div class="combo-group">Repeat / Medical</div>${opts(rep)}` : "");
+}
+function updateModuleHint() {
+  const el = document.getElementById("module-type-hint");
+  const v = document.getElementById("f-module").value.trim();
+  if (!v) { el.innerHTML = ""; return; }
+  const t = moduleType(v);
+  el.innerHTML = `Type: <span class="type-tag ${t}">${TYPE_LABEL[t]}</span>` +
+    (t === "repeat" ? ` &nbsp;<span style="color:var(--faint)">new/unlisted module — visible only to students who added it</span>` : "");
+}
+
+// ── Profile modal ──
+function openProfile() {
+  draft = { electives: [...profile.electives], repeats: [...profile.repeats] };
+  document.getElementById("profile-modal").style.display = "flex";
+  renderProfile();
+}
+function closeProfile() {
+  document.getElementById("profile-modal").style.display = "none";
+  draft = null;
+}
+function renderProfile() {
+  document.getElementById("prof-compulsory").innerHTML = MODULES.compulsory.map(m =>
+    `<div class="mod-row static"><span>${escHtml(m)}</span><span class="type-tag compulsory">Required</span></div>`).join("");
+
+  document.getElementById("prof-electives").innerHTML = MODULES.elective.map((m, i) => {
+    const on = draft.electives.some(x => norm(x) === norm(m));
+    return `<label class="mod-row ${on ? "checked" : ""}"><input type="checkbox" ${on ? "checked" : ""} onchange="toggleElective(${i}, this.checked)" /><span>${escHtml(m)}</span></label>`;
+  }).join("");
+
+  const n = draft.electives.length, ok = n >= MIN_ELECTIVES;
+  const c = document.getElementById("prof-elective-count");
+  c.textContent = `${n} selected${ok ? " ✓" : ` · need ${MIN_ELECTIVES - n} more`}`;
+  c.className = "prof-count " + (ok ? "ok" : "bad");
+
+  document.getElementById("prof-rep-chips").innerHTML = draft.repeats.map((m, i) =>
+    `<span class="rep-chip">${escHtml(m)}<button type="button" onclick="removeRepeat(${i})" title="Remove">×</button></span>`).join("");
+
+  const sugg = knownRepeatModules().filter(m => !draft.repeats.some(x => norm(x) === norm(m)));
+  document.getElementById("prof-rep-suggest").innerHTML = sugg.map(m =>
+    `<button type="button" class="type-chip" data-val="${escHtml(m)}" onclick="addRepeat(this.dataset.val)">+ ${escHtml(m)}</button>`).join("");
+}
+function toggleElective(i, on) {
+  const m = MODULES.elective[i];
+  draft.electives = draft.electives.filter(x => norm(x) !== norm(m));
+  if (on) draft.electives.push(m);
+  renderProfile();
+}
+function addRepeat(name) {
+  name = String(name || "").trim();
+  if (!name) return;
+  if (moduleType(name) !== "repeat") { showToast("ℹ️ That's already a compulsory/elective module"); return; }
+  if (!draft.repeats.some(x => norm(x) === norm(name))) draft.repeats.push(name);
+  renderProfile();
+}
+function addRepeatFromInput() {
+  const inp = document.getElementById("prof-rep-input");
+  addRepeat(inp.value);
+  inp.value = "";
+}
+function removeRepeat(i) { draft.repeats.splice(i, 1); renderProfile(); }
+function saveProfile() {
+  const pending = document.getElementById("prof-rep-input").value.trim();
+  if (pending) { addRepeat(pending); document.getElementById("prof-rep-input").value = ""; }
+  if (draft.electives.length < MIN_ELECTIVES) {
+    showToast(`⚠️ Choose at least ${MIN_ELECTIVES} electives`);
+    return;
+  }
+  profile = { electives: draft.electives, repeats: draft.repeats, setup: true };
+  persistProfile();
+  closeProfile();
+  refreshView();
+  showToast("✅ Modules saved");
+}
+
 init();
+if (!profile.setup) setTimeout(openProfile, 400);   // first visit → ask for electives
 setInterval(tickCountdowns, 30000);  // refresh countdowns every 30 seconds
 </script>
 </body>
