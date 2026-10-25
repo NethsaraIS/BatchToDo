@@ -451,6 +451,8 @@
     border-radius: 18px;
     padding: 24px;
     width: 100%; max-width: 480px;
+    max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px);
+    overflow-y: auto; overscroll-behavior: contain;
     animation: slideUp 0.2s ease;
   }
   @keyframes slideUp {
@@ -2053,6 +2055,7 @@ function toggleDatePicker() {
   if (!isOpen) {
     renderCalendar();
     panel.classList.add('open');
+    setTimeout(() => panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30);
     document.getElementById('date-btn').classList.add('open');
     // Give focus to grid so arrow keys work immediately
     setTimeout(() => document.getElementById('cal-grid').focus(), 50);
@@ -2158,6 +2161,7 @@ function toggleTimePicker() {
   if (!isOpen) {
     renderClock();
     panel.classList.add('open');
+    setTimeout(() => panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30);
     document.getElementById('time-btn').classList.add('open');
   }
 }
@@ -2308,6 +2312,7 @@ function toggleEndTimePicker() {
   if (!isOpen) {
     renderEndClock();
     panel.classList.add('open');
+    setTimeout(() => panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30);
     document.getElementById('end-time-btn').classList.add('open');
   }
 }
