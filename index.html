@@ -1314,6 +1314,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
 
 <script>
 // ══════════════════════════════════════════════════
@@ -1357,6 +1358,7 @@ function init() {
     tasksRef = db.ref("tasks");
     seedIfEmpty();
     listenToTasks();
+    startAnalytics();
   } catch (e) {
     document.getElementById("taskContainer").innerHTML =
       `<div class="empty"><div class="empty-icon">⚠️</div><p>Firebase connection failed.<br>Check your config values.</p></div>`;
@@ -2765,6 +2767,71 @@ function saveProfile() {
   closeProfile();
   refreshView();
   showToast("✅ Modules saved");
+}
+
+// ══════════════════════════════════════════
+//  USAGE TRACKING (invisible to students)
+//  • Firebase Analytics  → Firebase Console → Analytics
+//  • Visitor counter     → Realtime Database → "visitors"
+//  • Live stats panel    → open the site URL with  ?stats  at the end
+// ══════════════════════════════════════════
+const IS_STATS_VIEW = new URLSearchParams(location.search).has("stats");
+
+function startAnalytics() {
+  try { if (firebase.analytics) firebase.analytics(); } catch (e) {}
+  if (IS_STATS_VIEW) { showStatsPanel(); return; }   // don't count the admin's stats peeks
+  try { trackVisitor(); } catch (e) {}
+}
+
+function trackVisitor() {
+  let id = null;
+  try { id = localStorage.getItem("batchTodoVid"); } catch (e) {}
+  if (!id) {
+    id = "v" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    try { localStorage.setItem("batchTodoVid", id); } catch (e) {}
+  }
+  const TS  = firebase.database.ServerValue.TIMESTAMP;
+  const ref = db.ref("visitors/" + id);
+  const quiet = () => {};
+
+  ref.once("value").then(snap => {
+    if (!snap.exists()) ref.update({ firstSeen: TS }).catch(quiet);
+  }).catch(quiet);
+  ref.child("visits").transaction(v => (v || 0) + 1).catch(quiet);
+
+  // Online/offline presence
+  db.ref(".info/connected").on("value", s => {
+    if (s.val() !== true) return;
+    ref.onDisconnect().update({ online: false, lastSeen: TS })
+      .then(() => ref.update({ online: true, lastSeen: TS }))
+      .catch(quiet);
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") ref.update({ online: true, lastSeen: TS }).catch(quiet);
+  });
+}
+
+function showStatsPanel() {
+  const box = document.createElement("div");
+  box.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:500;background:#181c27;border:1px solid rgba(255,255,255,0.18);" +
+    "border-radius:12px;padding:12px 14px;font:12px 'DM Mono',monospace;color:#e8eaf0;box-shadow:0 8px 28px rgba(0,0,0,.5);min-width:190px;line-height:1.7";
+  box.innerHTML = "Loading stats…";
+  document.body.appendChild(box);
+  db.ref("visitors").on("value", snap => {
+    const all = Object.values(snap.val() || {});
+    const now = Date.now(), DAY = 86400000;
+    const online = all.filter(v => v.online === true).length;
+    const d1 = all.filter(v => v.lastSeen && now - v.lastSeen < DAY).length;
+    const d7 = all.filter(v => v.lastSeen && now - v.lastSeen < 7 * DAY).length;
+    const visits = all.reduce((a, v) => a + (v.visits || 0), 0);
+    box.innerHTML =
+      `<div style="color:#8890a8;font-size:10px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px">Usage (devices)</div>` +
+      `<div><span style="color:#68d391">●</span> Online now: <b>${online}</b></div>` +
+      `<div>Active 24h: <b>${d1}</b></div>` +
+      `<div>Active 7 days: <b>${d7}</b></div>` +
+      `<div>Total devices: <b>${all.length}</b></div>` +
+      `<div>Total visits: <b>${visits}</b></div>`;
+  }, () => { box.textContent = "Couldn't read stats (check database rules)."; });
 }
 
 init();
