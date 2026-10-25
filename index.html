@@ -896,6 +896,23 @@
     font-family: 'DM Sans', sans-serif; background: rgba(0,0,0,0.18);
   }
   .combo-group.hidden { display: none; }
+  .mtype-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mtype-opt {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 6px; background: var(--bg); border: 1px solid var(--border2);
+    border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s; text-align: center;
+  }
+  .mtype-opt:hover { background: var(--surface2); }
+  .mtype-opt .mt-name { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .mtype-opt .mt-sub  { font-size: 10px; color: var(--faint); line-height: 1.3; }
+  .mtype-opt.active.compulsory { border-color: var(--cmp-txt); background: var(--cmp-bg); }
+  .mtype-opt.active.elective   { border-color: var(--ele-txt); background: var(--ele-bg); }
+  .mtype-opt.active.repeat     { border-color: var(--rep-txt); background: var(--rep-bg); }
+  .mtype-opt.active.compulsory .mt-name { color: var(--cmp-txt); }
+  .mtype-opt.active.elective   .mt-name { color: var(--ele-txt); }
+  .mtype-opt.active.repeat     .mt-name { color: var(--rep-txt); }
+  @media (max-width: 480px) { .mtype-opt .mt-sub { display: none; } }
   .module-type-hint { margin-top: 6px; font-size: 11px; color: var(--muted); min-height: 16px; }
 
   /* ── Profile modal ── */
@@ -1038,6 +1055,21 @@
 <div class="overlay" id="modal" style="display:none" onclick="handleOverlayClick(event)">
   <div class="modal">
     <div class="modal-title" id="modal-title"><span>✏️</span> Add New Task</div>
+
+    <div class="form-group">
+      <label class="form-label">Module Type</label>
+      <div class="mtype-selector" id="mtype-selector">
+        <button type="button" class="mtype-opt compulsory active" data-type="compulsory" onclick="selectModuleType('compulsory')">
+          <span class="mt-name">Compulsory</span><span class="mt-sub">Everyone does it</span>
+        </button>
+        <button type="button" class="mtype-opt elective" data-type="elective" onclick="selectModuleType('elective')">
+          <span class="mt-name">Elective</span><span class="mt-sub">Students who chose it</span>
+        </button>
+        <button type="button" class="mtype-opt repeat" data-type="repeat" onclick="selectModuleType('repeat')">
+          <span class="mt-name">Repeat / Medical</span><span class="mt-sub">Students who have it</span>
+        </button>
+      </div>
+    </div>
 
     <div class="form-group">
       <label class="form-label">Module Name</label>
@@ -1611,7 +1643,7 @@ function collectForm() {
   const highlightModule = document.getElementById("f-highlight-module").checked;
   const rawDesc         = useDesc ? document.getElementById("f-desc").innerHTML.trim() : '';
   const desc            = rawDesc && rawDesc !== '<br>' ? sanitizeDesc(rawDesc) : '';
-  return { module, info, date, time, endTime, highlightModule, desc };
+  return { module, info, date, time, endTime, highlightModule, desc, moduleType: formModuleType };
 }
 
 function validateForm({ module, info, date, time }) {
@@ -1627,8 +1659,8 @@ function validateForm({ module, info, date, time }) {
   return valid;
 }
 
-function buildPayload({ module, info, date, time, endTime, highlightModule, desc }, preserveCreatedAt) {
-  const payload = { module, info, date, time, priority: selectedPriority };
+function buildPayload({ module, info, date, time, endTime, highlightModule, desc, moduleType }, preserveCreatedAt) {
+  const payload = { module, moduleType, info, date, time, priority: selectedPriority };
   if (preserveCreatedAt != null) payload.createdAt = preserveCreatedAt;
   else payload.createdAt = Date.now();
   if (endTime)         payload.endTime         = endTime;
@@ -1700,7 +1732,7 @@ function openEditModal(id) {
     const modInput = document.getElementById("f-module");
     modInput.value = task.module || '';
     modInput.classList.remove('error');
-    updateModuleHint();
+    selectModuleType(task.moduleType || 'compulsory');
 
     // ── Info ──
     document.getElementById("f-info").value = task.info || '';
@@ -1762,7 +1794,7 @@ function clearFormFields() {
   const sel = document.getElementById("f-module");
   sel.value = ''; sel.classList.remove("error");
   comboClose();
-  updateModuleHint();
+  selectModuleType('compulsory');
   const info = document.getElementById("f-info");
   info.value = ""; info.classList.remove("error");
   document.getElementById('f-highlight-module').checked = false;
@@ -2502,7 +2534,9 @@ function comboSelect(val) {
   document.getElementById('f-module').value = val;
   document.getElementById('f-module').classList.remove('error');
   comboClose();
-  updateModuleHint();
+  const known = knownModules().find(m => norm(m.name) === norm(val));
+  if (known) selectModuleType(known.type);   // existing module → use its type
+  else updateModuleHint();
 }
 
 // Close dropdown on outside click
@@ -2529,31 +2563,18 @@ document.addEventListener('click', e => {
 // ══════════════════════════════════════════
 //  MODULES, STUDENT PROFILE & FILTERING
 // ══════════════════════════════════════════
-// ✏️ Edit these lists each semester. Any module NOT listed here
-//    is treated as a Repeat / Medical module.
-const MODULES = {
-  compulsory: [
-    "Linear Algebra",
-    "Kinetics of Materials",
-    "Fundamentals of Machine Elements Design",
-    "Applied Statistics",
-    "Mechanics of Machines"
-  ],
-  elective: [
-    "Ceramic Engineering",
-    "Solid State Materials",
-    "Polymer Engineering"
-  ]
-};
+// Modules are not hard-coded: every task stores its module name + type
+// (compulsory / elective / repeat), and the module lists are built from tasks.
 const MIN_ELECTIVES = 3;
 const TYPE_LABEL = { compulsory: "Compulsory", elective: "Elective", repeat: "Repeat / Medical" };
-const PROFILE_KEY = "batchTodoProfile_v1";
+const PROFILE_KEY = "batchTodoProfile_v2";
 
 let allTasks   = [];
 let viewMode   = "mine";   // "mine" | "all"
 let filterType = "all";    // "all" | "compulsory" | "elective" | "repeat"
 let profile    = loadProfile();
 let draft      = null;     // working copy while the profile modal is open
+let formModuleType = "compulsory";
 
 const norm = s => String(s || "").trim().toLowerCase();
 
@@ -2562,38 +2583,74 @@ function loadProfile() {
     const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
     if (p && Array.isArray(p.electives) && Array.isArray(p.repeats)) {
       if (p.view === "all" || p.view === "mine") viewMode = p.view;
-      return { electives: p.electives, repeats: p.repeats, setup: !!p.setup };
+      return { electives: p.electives, repeats: p.repeats, setup: !!p.setup, seen: Array.isArray(p.seen) ? p.seen : [] };
     }
   } catch (e) {}
-  return { electives: [], repeats: [], setup: false };
+  return { electives: [], repeats: [], setup: false, seen: [] };
 }
 function persistProfile() {
   try { localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...profile, view: viewMode })); } catch (e) {}
 }
 
-// Type of a task is always derived from its module name
-function moduleType(name) {
-  const n = norm(name);
-  if (MODULES.compulsory.some(m => norm(m) === n)) return "compulsory";
-  if (MODULES.elective.some(m => norm(m) === n))   return "elective";
-  return "repeat";
+// Older tasks saved before module types existed count as compulsory
+function getTaskType(task) {
+  return TYPE_LABEL[task.moduleType] ? task.moduleType : "compulsory";
 }
-function getTaskType(task) { return moduleType(task.module); }
+
+// Unique modules across all tasks: [{name, type}]
+function knownModules() {
+  const map = new Map();
+  allTasks.forEach(t => {
+    if (!t.module) return;
+    const k = norm(t.module);
+    if (!map.has(k)) map.set(k, { name: t.module.trim(), type: getTaskType(t) });
+  });
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+const modulesOfType = type => knownModules().filter(m => m.type === type).map(m => m.name);
 
 function isMine(task) {
   const t = getTaskType(task);
   if (t === "compulsory") return true;
-  if (t === "elective")   return profile.electives.some(m => norm(m) === norm(task.module));
-  return profile.repeats.some(m => norm(m) === norm(task.module));
+  const list = t === "elective" ? profile.electives : profile.repeats;
+  return list.some(m => norm(m) === norm(task.module));
 }
 
-function knownRepeatModules() {
-  const seen = new Map();
-  allTasks.forEach(t => {
-    if (getTaskType(t) === "repeat" && t.module && !seen.has(norm(t.module))) seen.set(norm(t.module), t.module.trim());
+// ── Add-task form: module type selector ──
+function selectModuleType(t) {
+  formModuleType = TYPE_LABEL[t] ? t : "compulsory";
+  document.querySelectorAll("#mtype-selector .mtype-opt").forEach(b =>
+    b.classList.toggle("active", b.dataset.type === formModuleType));
+  updateModuleHint();
+}
+function updateModuleHint() {
+  const el = document.getElementById("module-type-hint");
+  const v = document.getElementById("f-module").value.trim();
+  if (!v) { el.innerHTML = ""; return; }
+  const known = knownModules().find(m => norm(m.name) === norm(v));
+  if (known && known.type !== formModuleType) {
+    el.innerHTML = `⚠️ “${escHtml(known.name)}” already exists as <span class="type-tag ${known.type}">${TYPE_LABEL[known.type]}</span> — make sure the type above is right.`;
+  } else if (known) {
+    el.innerHTML = `Existing module · <span class="type-tag ${known.type}">${TYPE_LABEL[known.type]}</span>`;
+  } else {
+    el.innerHTML = `New module · will be added as <span class="type-tag ${formModuleType}">${TYPE_LABEL[formModuleType]}</span>`;
+  }
+}
+
+// ── Add-task combo box: grouped options built from existing modules ──
+function buildComboOptionsIfNeeded() {
+  const dd = document.getElementById("combo-dropdown");
+  const mods = knownModules();
+  const sig = JSON.stringify(mods);
+  if (dd.dataset.sig === sig) return;
+  dd.dataset.sig = sig;
+  const opts = list => list.map(m => `<div class="combo-option" data-val="${escHtml(m)}" onmousedown="event.preventDefault()" onclick="comboSelect(this.dataset.val)">${escHtml(m)}</div>`).join("");
+  let html = "";
+  ["compulsory", "elective", "repeat"].forEach(t => {
+    const list = mods.filter(m => m.type === t).map(m => m.name);
+    if (list.length) html += `<div class="combo-group">${TYPE_LABEL[t]}</div>${opts(list)}`;
   });
-  profile.repeats.forEach(m => { if (!seen.has(norm(m))) seen.set(norm(m), m); });
-  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  dd.innerHTML = html;
 }
 
 // ── Main refresh: filter → render ──
@@ -2611,41 +2668,24 @@ function refreshView() {
     `<button class="type-chip ${filterType === k ? "active" : ""}" onclick="setTypeFilter('${k}')">${label}<span class="tc-n">${counts[k]}</span></button>`
   ).join("");
 
+  // Prompt students to pick electives (first time, or when new electives appear)
+  const electives = modulesOfType("elective");
+  const unseen = electives.filter(m => !profile.seen.some(s => norm(s) === norm(m)));
   const hint = document.getElementById("profile-hint");
-  if (!profile.setup) {
+  if (unseen.length) {
     hint.style.display = "block";
-    hint.innerHTML = `You haven't chosen your electives yet, so “My Modules” only shows <b>compulsory</b> tasks. <a onclick="openProfile()">Set up My Modules</a>`;
+    hint.innerHTML = profile.setup
+      ? `New elective module${unseen.length > 1 ? "s" : ""} available: <b>${unseen.map(escHtml).join(", ")}</b>. <a onclick="openProfile()">Update My Modules</a>`
+      : `Choose your electives (at least ${Math.min(MIN_ELECTIVES, electives.length)}) so “My Modules” shows the right tasks. <a onclick="openProfile()">Set up My Modules</a>`;
   } else { hint.style.display = "none"; }
 
   document.getElementById("profile-badge").textContent =
-    MODULES.compulsory.length + profile.electives.length + profile.repeats.length;
+    modulesOfType("compulsory").length + profile.electives.length + profile.repeats.length;
 
   renderTasks(shown);
 }
 function setView(v) { viewMode = v; persistProfile(); refreshView(); }
 function setTypeFilter(t) { filterType = t; refreshView(); }
-
-// ── Add-task combo box: grouped options ──
-function buildComboOptionsIfNeeded() {
-  const dd = document.getElementById("combo-dropdown");
-  const rep = knownRepeatModules();
-  const sig = JSON.stringify([MODULES, rep]);
-  if (dd.dataset.sig === sig) return;
-  dd.dataset.sig = sig;
-  const opts = list => list.map(m => `<div class="combo-option" data-val="${escHtml(m)}" onmousedown="event.preventDefault()" onclick="comboSelect(this.dataset.val)">${escHtml(m)}</div>`).join("");
-  dd.innerHTML =
-    `<div class="combo-group">Compulsory</div>${opts(MODULES.compulsory)}` +
-    `<div class="combo-group">Elective</div>${opts(MODULES.elective)}` +
-    (rep.length ? `<div class="combo-group">Repeat / Medical</div>${opts(rep)}` : "");
-}
-function updateModuleHint() {
-  const el = document.getElementById("module-type-hint");
-  const v = document.getElementById("f-module").value.trim();
-  if (!v) { el.innerHTML = ""; return; }
-  const t = moduleType(v);
-  el.innerHTML = `Type: <span class="type-tag ${t}">${TYPE_LABEL[t]}</span>` +
-    (t === "repeat" ? ` &nbsp;<span style="color:var(--faint)">new/unlisted module — visible only to students who added it</span>` : "");
-}
 
 // ── Profile modal ──
 function openProfile() {
@@ -2658,28 +2698,35 @@ function closeProfile() {
   draft = null;
 }
 function renderProfile() {
-  document.getElementById("prof-compulsory").innerHTML = MODULES.compulsory.map(m =>
-    `<div class="mod-row static"><span>${escHtml(m)}</span><span class="type-tag compulsory">Required</span></div>`).join("");
+  const comp = modulesOfType("compulsory");
+  document.getElementById("prof-compulsory").innerHTML = comp.length
+    ? comp.map(m => `<div class="mod-row static"><span>${escHtml(m)}</span><span class="type-tag compulsory">Required</span></div>`).join("")
+    : `<div class="prof-note">No compulsory modules added yet.</div>`;
 
-  document.getElementById("prof-electives").innerHTML = MODULES.elective.map((m, i) => {
-    const on = draft.electives.some(x => norm(x) === norm(m));
-    return `<label class="mod-row ${on ? "checked" : ""}"><input type="checkbox" ${on ? "checked" : ""} onchange="toggleElective(${i}, this.checked)" /><span>${escHtml(m)}</span></label>`;
-  }).join("");
+  const elec = modulesOfType("elective");
+  document.getElementById("prof-electives").innerHTML = elec.length
+    ? elec.map((m, i) => {
+        const on = draft.electives.some(x => norm(x) === norm(m));
+        return `<label class="mod-row ${on ? "checked" : ""}"><input type="checkbox" ${on ? "checked" : ""} onchange="toggleElective(${i}, this.checked)" /><span>${escHtml(m)}</span></label>`;
+      }).join("")
+    : `<div class="prof-note">No elective modules added yet — they'll appear here once someone adds a task for one.</div>`;
 
-  const n = draft.electives.length, ok = n >= MIN_ELECTIVES;
+  const need = Math.min(MIN_ELECTIVES, elec.length);
+  const n = draft.electives.filter(x => elec.some(e => norm(e) === norm(x))).length;
+  const ok = n >= need;
   const c = document.getElementById("prof-elective-count");
-  c.textContent = `${n} selected${ok ? " ✓" : ` · need ${MIN_ELECTIVES - n} more`}`;
+  c.textContent = `${n} selected${ok ? " ✓" : ` · need ${need - n} more`}`;
   c.className = "prof-count " + (ok ? "ok" : "bad");
 
   document.getElementById("prof-rep-chips").innerHTML = draft.repeats.map((m, i) =>
     `<span class="rep-chip">${escHtml(m)}<button type="button" onclick="removeRepeat(${i})" title="Remove">×</button></span>`).join("");
 
-  const sugg = knownRepeatModules().filter(m => !draft.repeats.some(x => norm(x) === norm(m)));
+  const sugg = modulesOfType("repeat").filter(m => !draft.repeats.some(x => norm(x) === norm(m)));
   document.getElementById("prof-rep-suggest").innerHTML = sugg.map(m =>
     `<button type="button" class="type-chip" data-val="${escHtml(m)}" onclick="addRepeat(this.dataset.val)">+ ${escHtml(m)}</button>`).join("");
 }
 function toggleElective(i, on) {
-  const m = MODULES.elective[i];
+  const m = modulesOfType("elective")[i];
   draft.electives = draft.electives.filter(x => norm(x) !== norm(m));
   if (on) draft.electives.push(m);
   renderProfile();
@@ -2687,8 +2734,9 @@ function toggleElective(i, on) {
 function addRepeat(name) {
   name = String(name || "").trim();
   if (!name) return;
-  if (moduleType(name) !== "repeat") { showToast("ℹ️ That's already a compulsory/elective module"); return; }
-  if (!draft.repeats.some(x => norm(x) === norm(name))) draft.repeats.push(name);
+  const known = knownModules().find(m => norm(m.name) === norm(name));
+  if (known && known.type !== "repeat") { showToast(`ℹ️ “${known.name}” is a ${TYPE_LABEL[known.type].toLowerCase()} module`); return; }
+  if (!draft.repeats.some(x => norm(x) === norm(name))) draft.repeats.push(known ? known.name : name);
   renderProfile();
 }
 function addRepeatFromInput() {
@@ -2700,11 +2748,14 @@ function removeRepeat(i) { draft.repeats.splice(i, 1); renderProfile(); }
 function saveProfile() {
   const pending = document.getElementById("prof-rep-input").value.trim();
   if (pending) { addRepeat(pending); document.getElementById("prof-rep-input").value = ""; }
-  if (draft.electives.length < MIN_ELECTIVES) {
-    showToast(`⚠️ Choose at least ${MIN_ELECTIVES} electives`);
+  const elec = modulesOfType("elective");
+  const need = Math.min(MIN_ELECTIVES, elec.length);
+  const n = draft.electives.filter(x => elec.some(e => norm(e) === norm(x))).length;
+  if (n < need) {
+    showToast(`⚠️ Choose at least ${need} electives`);
     return;
   }
-  profile = { electives: draft.electives, repeats: draft.repeats, setup: true };
+  profile = { electives: draft.electives, repeats: draft.repeats, setup: true, seen: elec };
   persistProfile();
   closeProfile();
   refreshView();
@@ -2712,7 +2763,6 @@ function saveProfile() {
 }
 
 init();
-if (!profile.setup) setTimeout(openProfile, 400);   // first visit → ask for electives
 setInterval(tickCountdowns, 30000);  // refresh countdowns every 30 seconds
 </script>
 </body>
